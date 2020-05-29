@@ -1,1 +1,2 @@
+admin;sifra123;Admin;Adminovic;MALE;ADMIN
 pera;sifra123;Pera;Peric;MALE;GUEST
