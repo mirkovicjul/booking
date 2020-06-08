@@ -1,7 +1,7 @@
 Vue.component("navbar", {
 	data: function () {
 		    return {
-		      loggedIn: localStorage.getItem("loggedIn")
+		      loggedIn: localStorage.getItem("jwt") ? true : false
 		    }
 	},
 	template: ` 
@@ -14,12 +14,15 @@ Vue.component("navbar", {
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item active">
-        <a class="nav-link" href="#/">Home<span class="sr-only">(current)</span></a>
+        <a class="nav-link" href="#/">Home</a>
       </li>
     </ul>
 
 	<span v-if="!loggedIn" class="navbar-text">
       <a class="nav-link" href="#/login">Login</a>
+    </span>
+    <span v-if="loggedIn" class="navbar-text">
+      <a class="nav-link" href="#/login" v-on:click="logout()">Log out</a>
     </span>
     
   </div>
@@ -27,9 +30,14 @@ Vue.component("navbar", {
 `
 	, 
 	methods : {
-		
+		logout: function() {
+			localStorage.removeItem('jwt');
+			localStorage.removeItem('role');
+			localStorage.removeItem('user');
+			this.loggedIn = false;
+		}
 	},
-	mounted () {
+	mounted() {
 
     },
     created(){

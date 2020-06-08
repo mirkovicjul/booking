@@ -5,7 +5,7 @@ Vue.component("login", {
 		    	  username: "",
 		    	  password: ""
 		      },
-		      loggedIn: localStorage.getItem("loggedIn"),
+		      loggedIn: localStorage.getItem("jwt") ? true : false,
 		      loginFailed: null,
 		      usernameFieldFocus: null,
 		      passwordFieldFocus: null
@@ -58,13 +58,12 @@ Vue.component("login", {
 				localStorage.setItem('jwt', data.jwt);
 				localStorage.setItem('role', data.role);
 				localStorage.setItem('user', data.username);
-				localStorage.setItem('loggedIn', true);
 				window.location.reload();
 			} else {
 				this.loginFailed = true;
 			}
 		},
-		login : function (user) {
+		login: function(user) {
 			axios
 	          .post('rest/login', {"username":user.username, "password":user.password})
 	          .then(response => (this.checkLogin(response.data)));
@@ -80,10 +79,10 @@ Vue.component("login", {
 			}
 		}
 	},
-	mounted () {
+	mounted() {
       
     },
-    created(){
+    created() {
     	if(this.loggedIn)
     		this.$router.push({ name: 'home' });
     }
