@@ -1,8 +1,12 @@
 package dao;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +32,27 @@ public class UserDAO {
 		return users.values();
 	}
 	
+	public User save(String contextPath, User user) {
+		FileWriter myWriter;
+		String userCsv = user.getUsername() + ";" + user.getPassword() + ";" + user.getFirstName() + ";" + user.getLastName()
+		 		+ ";" + user.getGender().toString() + ";" + user.getRole().toString();
+		try {
+			System.out.println(userCsv);
+			FileWriter fw = new FileWriter(contextPath + "users.txt", true);
+		    BufferedWriter bw = new BufferedWriter(fw);
+		    PrintWriter out = new PrintWriter(bw);
+		    out.println(userCsv);
+		    out.close();
+		    loadUsers(contextPath);
+		    return user;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	      
+	}
+	
 	public User findByUsernamePassword(String username, String password) {
 		if (!users.containsKey(username)) {
 			return null;
@@ -38,6 +63,14 @@ public class UserDAO {
 		}
 		return user;
 	}
+	
+	public Boolean usernameAvailable(String username) {
+		if(!users.containsKey(username))
+			return true;
+		else
+			return false;
+	}
+	
 	
 	private void loadUsers(String contextPath) {
 		BufferedReader in = null;
