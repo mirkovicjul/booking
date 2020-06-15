@@ -1,7 +1,6 @@
 Vue.component("registration", {
 	data: function () {
 		    return {
-		    	loggedIn: localStorage.getItem("jwt") ? true : false,
 		    	user: {
 		    		username: "",
 		    		firstName: "",
@@ -30,66 +29,84 @@ Vue.component("registration", {
         <br>
         <br>
         <div id="big-form" class="well auth-box">
-            <div class="form-group">
-                <label class=" control-label" for="textinput">Username:</label>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Username:</label>
                 <div class="">
-                    <input name="username" class="form-control input-md" type="text" v-model="user.username" v-on:focusout="setFieldFocus('username')" required>
+                    <input name="username" class="form-control" type="text" v-model="user.username" v-on:focusout="setFieldFocus('username')" required>
+                	<div v-if="usernameFieldFocus && user.username.length==0">
+	                   	<small class="form-text text-danger">
+							Username is required.
+						</small>
+            		</div>
                 </div>
             </div>
-            <div v-if="usernameFieldFocus && user.username.length==0" class="alert alert-danger">
-                   	Username is required.
-            </div>
-            <div class="form-group">
-                <label class=" control-label" for="textinput">First name:</label>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">First name:</label>
                 <div class="">
-                    <input name="firstName" class="form-control input-md" type="text" v-model="user.firstName" v-on:focusout="setFieldFocus('firstName')" required>
+                    <input name="firstName" class="form-control" type="text" v-model="user.firstName" v-on:focusout="setFieldFocus('firstName')" required>
+                	<div v-if="firstNameFieldFocus && user.firstName.length==0">
+	                   	<small class="form-text text-danger">
+							First name is required.
+						</small>
+            		</div>
                 </div>
             </div>
-            <div v-if="firstNameFieldFocus && user.firstName.length==0" class="alert alert-danger">
-                   	First name is required.
-            </div>
-            <div class="form-group">
-                <label class=" control-label" for="textinput">Last name:</label>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Last name:</label>
                 <div class="">
-                    <input name="lastName" class="form-control input-md" type="text" v-model="user.lastName" v-on:focusout="setFieldFocus('lastName')" required>
+                    <input name="lastName" class="form-control" type="text" v-model="user.lastName" v-on:focusout="setFieldFocus('lastName')" required>
+                	<div v-if="lastNameFieldFocus && user.lastName.length==0">
+	                   	<small class="form-text text-danger">
+							Last name is required.
+						</small>
+            		</div>
                 </div>
             </div>
-            <div v-if="lastNameFieldFocus && user.lastName.length==0" class="alert alert-danger">
-                   	Last name is required.
-            </div>
-            <div class="form-group">
-            <label class=" control-label" for="selectbasic">Gender:</label>
+            
+            <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="selectbasic">Gender:</label>
                 <div class="">
 		            <select class="form-control" v-model="user.gender" v-on:focusout="setFieldFocus('gender')">
 					  <option disabled value="">Please select one</option>
 					  <option v-for="gender in genders" :key="gender">{{gender}}</option>
 					</select>
+					<div v-if="genderFieldFocus && user.gender==null">
+	                   	<small class="form-text text-danger">
+							Gender is required.
+						</small>
+            		</div>
 				</div>
             </div>
-            <div v-if="genderFieldFocus && user.gender==null" class="alert alert-danger">
-                   	Gender is required.
-            </div>
-            <div class="form-group">
-                <label class=" control-label" for="textinput">Password:</label>
+           
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Password:</label>
                 <div class="">
-                    <input name="password" class="form-control input-md" type="password" v-model="user.password" v-on:focusout="setFieldFocus('password')" required>
+                    <input name="password" class="form-control" type="password" v-model="user.password" v-on:focusout="setFieldFocus('password')" required>
+                	<div v-if="passwordFieldFocus && user.password.length==0">
+	                   	<small class="form-text text-danger">
+							Password is required.
+						</small>
+            		</div>
                 </div>
             </div>
-            <div v-if="passwordFieldFocus && user.password.length==0" class="alert alert-danger">
-                   	Password is required.
-            </div>
-             <div class="form-group">
-                <label class=" control-label" for="textinput">Confirm Password:</label>
+            
+             <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Confirm password:</label>
                 <div class="">
-                    <input name="passwordConfirmation" class="form-control input-md" type="password" v-model="user.passwordConfirmation" v-on:focusin="setFieldFocus('passwordConfirmation')" required>
+                    <input name="passwordConfirmation" class="form-control" type="password" v-model="user.passwordConfirmation" v-on:focusin="setFieldFocus('passwordConfirmation')" required>
+                	<div v-if="passwordConfirmationFieldFocus && (user.passwordConfirmation.length==0 || user.password!=user.passwordConfirmation)">
+                   	<small class="form-text text-danger">
+						Passwords need to match.
+					</small>
+            </div>
                 </div>
             </div>
-            <div v-if="passwordConfirmationFieldFocus && (user.passwordConfirmation.length==0 || user.password != user.passwordConfirmation)" class="alert alert-danger">
-                   	Passwords need to match.
-            </div>
+           
             <div class="form-group">
                 <div class="">
-                     <button class="btn btn-success" v-on:click="register(user)" v-bind:disabled="!validateForm()">Sign up</button>
+                     <button class="btn btn-info" v-on:click="register(user)" v-bind:disabled="!validateForm()">Sign up</button>
                 </div>
             </div>
             <div v-if="response.failed" class="alert alert-danger">
@@ -177,7 +194,7 @@ Vue.component("registration", {
         .then(response => (this.genders = response.data));
     },
     created() {
-    	if(this.loggedIn)
+    	if(this.loggdIn)
     		this.$router.push({ name: 'home' });
     }
 });

@@ -25,6 +25,9 @@ Vue.component("navbar", {
       <a class="nav-link" href="#/register">Register</a>
     </span>
     <span v-if="loggedIn" class="navbar-text">
+      <a class="nav-link" href="#/account"">Account</a>
+    </span>
+    <span v-if="loggedIn" class="navbar-text">
       <a class="nav-link" href="#/login" v-on:click="logout()">Log out</a>
     </span>
     

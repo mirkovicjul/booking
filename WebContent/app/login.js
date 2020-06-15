@@ -22,26 +22,35 @@ Vue.component("login", {
                 <label class=" control-label" for="textinput">Username:</label>
                 <div class="">
                     <input name="username" class="form-control input-md" type="text" v-model="user.username" v-on:focusout="setFieldFocus('username')" required>
+                	<div v-if="usernameFieldFocus && user.username.length==0">
+	                   	<small class="form-text text-danger">
+							Username is required.
+						</small>
+            		</div>
                 </div>
             </div>
-            <div v-if="usernameFieldFocus && user.username.length==0" class="alert alert-danger">
-                   	Username is required.
-            </div>
+            
             <div class="form-group">
                 <label class=" control-label" for="textinput">Password:</label>
                 <div class="">
                     <input name="password" class="form-control input-md" type="password" v-model="user.password" v-on:focusout="setFieldFocus('password')" required>
+                	<div v-if="passwordFieldFocus && user.password.length==0">
+	                   	<small class="form-text text-danger">
+							Password is required.
+						</small>
+            		</div>
                 </div>
             </div>
-            <div v-if="passwordFieldFocus && user.password.length==0" class="alert alert-danger">
-                   	Password is required.
-            </div>
-            <div v-if="loginFailed" class="alert alert-danger">
-                    Invalid username or password.
-            </div>
+            
+           
             <div class="form-group">
                 <div class="">
-                     <button class="btn btn-success" v-on:click="login(user)" v-bind:disabled="user.username.length==0 || user.password.length==0">Log in</button>
+                    <button class="btn btn-info" v-on:click="login(user)" v-bind:disabled="user.username.length==0 || user.password.length==0">Log in</button>
+                	<div v-if="loginFailed">
+	                    <small class="form-text text-danger">
+							Invalid username or password.
+						</small>
+            		</div>
                 </div>
             </div>
         </div>
@@ -59,6 +68,8 @@ Vue.component("login", {
 				localStorage.setItem('role', data.role);
 				localStorage.setItem('user', data.username);
 				window.location.reload();
+				this.loggedIn = true;
+				this.loggdIn = true;
 			} else {
 				this.loginFailed = true;
 			}
