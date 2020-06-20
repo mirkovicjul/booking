@@ -1,0 +1,7 @@
+1;WiFi;true
+2;TV;true
+3;Iron;true
+4;Washing machine;true
+5;Coffee maker;false
+6;Rent-a-car;false
+7;Shampoo;true

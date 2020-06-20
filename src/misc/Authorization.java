@@ -39,7 +39,41 @@ public class Authorization {
 	    }
 		return false;
 	}
-
+	
+	public static String getUserRole(HttpServletRequest request) {
+		String auth = request.getHeader("Authorization");
+		System.out.println("Authorization: " + auth);
+		if ((auth != null) && (auth.contains("Bearer "))) {
+			String jwt = auth.substring(auth.indexOf("Bearer ") + 7);
+			try {
+			    Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt);
+			    String role = (String) claims.getBody().get("role");
+			    return role;
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	public static String getUsername(HttpServletRequest request) {
+		String auth = request.getHeader("Authorization");
+		System.out.println("Authorization: " + auth);
+		if ((auth != null) && (auth.contains("Bearer "))) {
+			String jwt = auth.substring(auth.indexOf("Bearer ") + 7);
+			try {
+			    Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt);
+			    String username = (String) claims.getBody().get("username");
+			    return username;
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+				return null;
+			}
+		}
+		return null;
+	}
+	
 	public static Key getKey() {
 		return key;
 	}
