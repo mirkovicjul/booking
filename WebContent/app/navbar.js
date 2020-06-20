@@ -1,6 +1,7 @@
 Vue.component("navbar", {
 	data: function () {
 		    return {
+		      role: localStorage.getItem("role"),
 		      loggedIn: localStorage.getItem("jwt") ? true : false
 		    }
 	},
@@ -15,6 +16,12 @@ Vue.component("navbar", {
     <ul class="navbar-nav mr-auto">
       <li class="nav-item active">
         <a class="nav-link" href="#/">Home</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#/apartments">Apartments</a>
+      </li>
+      <li v-if="role=='ADMIN'" class="nav-item active">
+        <a class="nav-link" href="#/amenities">Amenities</a>
       </li>
     </ul>
 
@@ -41,6 +48,7 @@ Vue.component("navbar", {
 			localStorage.removeItem('role');
 			localStorage.removeItem('user');
 			this.loggedIn = false;
+			this.role = "";
 		}
 	},
 	mounted() {

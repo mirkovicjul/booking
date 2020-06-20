@@ -1,6 +1,7 @@
 Vue.component("registration", {
 	data: function () {
 		    return {
+		    	loggedIn: localStorage.getItem("jwt") ? true : false,
 		    	user: {
 		    		username: "",
 		    		firstName: "",
@@ -194,7 +195,7 @@ Vue.component("registration", {
         .then(response => (this.genders = response.data));
     },
     created() {
-    	if(this.loggdIn)
+    	if(this.loggedIn)
     		this.$router.push({ name: 'home' });
     }
 });

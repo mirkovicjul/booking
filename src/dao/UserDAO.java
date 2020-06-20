@@ -92,7 +92,7 @@ public class UserDAO {
 	
 	public Boolean updateUserPassword(String contextPath, User user) {
 		try {
-			File file = new File(contextPath + "users.txt");
+			File file = new File(contextPath + "/users.txt");
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			String line = "", oldtext = "";
 			StringTokenizer st;
@@ -118,7 +118,7 @@ public class UserDAO {
 				}
 			}
 			reader.close();
-			FileWriter writer = new FileWriter(contextPath + "users.txt");
+			FileWriter writer = new FileWriter(contextPath + "/users.txt");
             writer.write(oldtext);
             writer.close();
             loadUsers(contextPath);
@@ -183,6 +183,7 @@ public class UserDAO {
 				try {
 					in.close();
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}

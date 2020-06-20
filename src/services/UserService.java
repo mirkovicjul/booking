@@ -87,8 +87,8 @@ public class UserService {
 		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST, UserRoleEnum.GUEST};
 		if(Authorization.authorizeUser(request, roles)) {
 			UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-			User userData = dao.findByUsername(username);
-			userData.setPassword("");
+			User user = dao.findByUsername(username);
+			User userData = new User(user.getUsername(),"",user.getFirstName(), user.getLastName(), user.getGender(), user.getRole());
 			return Response
 					.status(Response.Status.OK)
 					.entity(userData)
