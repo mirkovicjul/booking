@@ -124,29 +124,45 @@ Vue.component("amenities", {
 		updateAmenity: function(amenity){
 			axios
 	        .post('rest/amenity/update', {"id":amenity.id, "name":amenity.name})
-	        .then(response => (this.updateAmenityResponse = response.data));
-			axios
-	        .get('rest/amenity/all')
-	        .then(response => (this.amenities = response.data));
+	        .then(response => (this.updateAmenityCheckResponse(response.data)));
+		
+		},
+		updateAmenityCheckResponse: function(response){
+			this.updateAmenityResponse = response;
+			if(this.updateAmenityResponse.success){
+				axios
+		        .get('rest/amenity/all')
+		        .then(response => (this.amenities = response.data));
+			}
 		},
 		createNewAmenity: function(name){
 			axios
 	        .post('rest/amenity/create', {"name":name})
-	        .then(response => (this.newAmenityResponse = response.data));
-			axios
-	        .get('rest/amenity/all')
-	        .then(response => (this.amenities = response.data));
+	        .then(response => (this.createNewAmenityCheckResponse(response.data)));
+		},
+		createNewAmenityCheckResponse: function(response){
+			this.newAmenityResponse = response;
+			if(this.newAmenityResponse.success){
+				axios
+		        .get('rest/amenity/all')
+		        .then(response => (this.amenities = response.data));
+			}
 		},
 		deleteAmenity: function(amenity){
 			axios
 	        .post('rest/amenity/delete', {"id":amenity.id, "name":amenity.name})
-	        .then(response => (this.deleteAmenityResponse = response.data));
-			axios
-	        .get('rest/amenity/all')
-	        .then(response => (this.amenities = response.data));
-			this.updateAmenityResponse = "";
-			this.mode = "BROWSE";
-			this.selectedAmenity = null;
+	        .then(response => (this.deleteAmenityCheckResponse(response.data)));	
+		},
+		deleteAmenityCheckResponse: function(response){
+			this.deleteAmenityResponse = response.data;
+			if(this.deleteAmenityResponse.success){
+				axios
+		        .get('rest/amenity/all')
+		        .then(response => (this.amenities = response.data));
+				this.updateAmenityResponse = "";
+				this.mode = "BROWSE";
+				this.selectedAmenity = null;
+			}
 		}
 	},
 	mounted() {
