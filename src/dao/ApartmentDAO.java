@@ -56,6 +56,51 @@ public class ApartmentDAO {
 		return apartments.get(id);
 	}
 
+	public Boolean save(String contextPath, Apartment apartment) {	
+		Long locationId = locationDAO.save(contextPath, apartment.getLocation());
+		if(locationId != -1L) {
+			Long maxIdApartment = -1L;
+			for (Long id : apartments.keySet()) {
+				if (id > maxIdApartment) {
+					maxIdApartment = id;
+				}
+			}
+			maxIdApartment++;
+			apartment.setId(maxIdApartment);
+			String apartmentCsv = maxIdApartment + ";" + apartment.getName() + ";" + apartment.getApartmentType() + ";"
+					+ apartment.getNumberOfRooms() + ";" + apartment.getCapacity() + ";" + locationId + ";"
+					+ apartment.getHost().getUsername() + ";" + apartment.getPrice() + ";" + apartment.getCheckIn() + ";"
+					+ apartment.getCheckOut() + ";false;false";
+			
+			List<Amenity> amenities = apartment.getAmenities();
+			
+			String amenityApartmentCsv = "";
+			for(Amenity amenity : amenities) {
+				amenityApartmentCsv += maxIdApartment + ";" + amenity.getId() + "\r\n";
+			}
+			
+			try {
+				FileWriter fw = new FileWriter(contextPath + "/apartments.txt", true);
+				BufferedWriter bw = new BufferedWriter(fw);
+				PrintWriter out = new PrintWriter(bw);
+				out.println(apartmentCsv);
+				out.close();
+				
+				FileWriter fw2 = new FileWriter(contextPath + "/apartments_amenities.txt", true);
+				BufferedWriter bw2 = new BufferedWriter(fw2);
+				PrintWriter out2 = new PrintWriter(bw2);
+				out2.println(amenityApartmentCsv);
+				out2.close();
+				apartments.put(apartment.getId(), apartment);
+				return true;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		return false;
+	}
+	
 	private void loadApartments(String contextPath) {
 		System.out.println("loading apartments");
 		BufferedReader in = null;
@@ -152,49 +197,6 @@ public class ApartmentDAO {
 		}
 	}
 
-	public Boolean save(String contextPath, Apartment apartment) {	
-		Long locationId = locationDAO.save(contextPath, apartment.getLocation());
-		if(locationId != -1L) {
-			Long maxIdApartment = -1L;
-			for (Long id : apartments.keySet()) {
-				if (id > maxIdApartment) {
-					maxIdApartment = id;
-				}
-			}
-			maxIdApartment++;
-			apartment.setId(maxIdApartment);
-			String apartmentCsv = maxIdApartment + ";" + apartment.getName() + ";" + apartment.getApartmentType() + ";"
-					+ apartment.getNumberOfRooms() + ";" + apartment.getCapacity() + ";" + locationId + ";"
-					+ apartment.getHost().getUsername() + ";" + apartment.getPrice() + ";" + apartment.getCheckIn() + ";"
-					+ apartment.getCheckOut() + ";false;false";
-			
-			List<Amenity> amenities = apartment.getAmenities();
-			
-			String amenityApartmentCsv = "";
-			for(Amenity amenity : amenities) {
-				amenityApartmentCsv += maxIdApartment + ";" + amenity.getId() + "\r\n";
-			}
-			
-			try {
-				FileWriter fw = new FileWriter(contextPath + "/apartments.txt", true);
-				BufferedWriter bw = new BufferedWriter(fw);
-				PrintWriter out = new PrintWriter(bw);
-				out.println(apartmentCsv);
-				out.close();
-				
-				FileWriter fw2 = new FileWriter(contextPath + "/apartments_amenities.txt", true);
-				BufferedWriter bw2 = new BufferedWriter(fw2);
-				PrintWriter out2 = new PrintWriter(bw2);
-				out.println(amenityApartmentCsv);
-				out.close();
-				apartments.put(apartment.getId(), apartment);
-				return true;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-		}
-		return false;
-	}
+	
 
 }
