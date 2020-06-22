@@ -20,6 +20,10 @@ public class Apartment {
 	private List<Comment> comments;
 	private Boolean deleted;
 	
+	public Apartment() {
+		
+	}
+	
 	public Apartment(Long id, String name, ApartmentTypeEnum apartmentType, int numberOfRooms, int capacity, Location location,
 			User host, Long price, String checkIn, String checkOut, Boolean active, List<Amenity> amenities, List<Comment> comments, Boolean deleted) {
 		super();

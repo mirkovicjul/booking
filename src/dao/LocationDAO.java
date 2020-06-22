@@ -1,8 +1,12 @@
 package dao;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +35,34 @@ public class LocationDAO {
 	
 	public Location findById(Long id) {
 		return locations.get(id);
+	}
+	public Long save(String contextPath, Location location) {
+		Long maxIdLocation = -1L;
+		for (Long l : this.locations.keySet()) {
+			if (l > maxIdLocation) {
+				maxIdLocation = l;
+			}
+		}
+		maxIdLocation++;
+		
+		Address address = location.getAddress();
+		
+		String locationCsv = maxIdLocation + ";" + location.getLatitude() + ";" + location.getLongitude() + ";"
+				+ address.getStreet() + ";" + address.getCity() + ";" + address.getPostalCode() + ";"
+				+ address.getCountry();
+		
+		try {
+			FileWriter fw = new FileWriter(contextPath + "/locations.txt", true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter out = new PrintWriter(bw);
+			out.println(locationCsv);
+			out.close();
+			locations.put(maxIdLocation, location);
+			return maxIdLocation;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return -1L;
+		}	
 	}
 	
 	private void loadLocations(String contextPath) {

@@ -6,6 +6,7 @@ const Account = { template: '<account></account>'}
 const Apartments = { template: '<apartments></apartments>'}
 const Apartment = { template: '<apartment></apartment>'}
 const Amenities = { template: '<amenities></amenities>'}
+const NewApartment = { template: '<new-apartment></new-apartment>'}
 
 const router = new VueRouter({
 	  mode: 'hash',
@@ -16,7 +17,8 @@ const router = new VueRouter({
 	    { path: '/account', name: 'account', component: Account},
 	    { path: '/apartments', name: 'apartments', component: Apartments},
 	    { path: '/apartment/:id', name: 'apartment', component: Apartment},
-	    { path: '/amenities', name: 'amenities', component: Amenities}
+	    { path: '/amenities', name: 'amenities', component: Amenities},
+	    { path: '/new-apartment', name: 'new-apartment', component: NewApartment}
 	  ]
 });
 

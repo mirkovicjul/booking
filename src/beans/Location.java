@@ -7,6 +7,10 @@ public class Location {
 	private String longitude;	
 	private Address address;
 	
+	public Location() {
+		
+	}
+	
 	public Location(Long id, String latitude, String longitude, Address address) {
 		super();
 		this.id = id;

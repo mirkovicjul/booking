@@ -2,11 +2,16 @@ package services;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -15,7 +20,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import beans.Apartment;
+import beans.ApartmentTypeEnum;
+import beans.User;
 import beans.UserRoleEnum;
+import beans.dto.MsgResponse;
 import dao.AmenityDAO;
 import dao.ApartmentDAO;
 import dao.CommentDAO;
@@ -129,4 +137,53 @@ public class ApartmentService {
 				      .entity(apartment)
 				      .build();
 	}
+	
+	@POST
+	@Path("/add")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response addNewApartment(@Context HttpServletRequest request, Apartment apartment) {
+		UserRoleEnum[] roles = {UserRoleEnum.HOST};
+		if(Authorization.authorizeUser(request, roles)) {
+			String username = Authorization.getUsername(request);
+			UserDAO userDAO = (UserDAO) ctx.getAttribute("userDAO");
+			User user = userDAO.findByUsername(username);
+			User host = new User(user.getUsername(),"",user.getFirstName(), user.getLastName(), user.getGender(), user.getRole());
+			apartment.setHost(host);
+			apartment.setActive(false);
+			apartment.setDeleted(false);
+			ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");	
+			Boolean response = dao.save(ctx.getRealPath(""), apartment);
+			if(response) {
+				MsgResponse res = new MsgResponse(true, "Apartment successfully created.");
+				return Response
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			} else {
+				MsgResponse res = new MsgResponse(false, "Something went wrong.");
+				return Response
+						.status(Response.Status.BAD_REQUEST)
+						.entity(res)
+						.build();
+			}
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
+	@GET
+	@Path("/types")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getApartmentTypes(@Context HttpServletRequest request, @PathParam("id") Long id) {
+		List<String> enumNames = Stream.of(ApartmentTypeEnum.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+		return Response
+			      .status(Response.Status.OK)
+			      .entity(enumNames)
+			      .build();
+	}
+	
 }
