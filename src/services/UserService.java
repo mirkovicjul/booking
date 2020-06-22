@@ -86,20 +86,21 @@ public class UserService {
 	public Response getUserAccountData(@Context HttpServletRequest request, @PathParam("username") String username) {
 		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST, UserRoleEnum.GUEST};
 		if(Authorization.authorizeUser(request, roles)) {
-			UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-			User user = dao.findByUsername(username);
-			User userData = new User(user.getUsername(),"",user.getFirstName(), user.getLastName(), user.getGender(), user.getRole());
-			return Response
-					.status(Response.Status.OK)
-					.entity(userData)
-					.build();
-		} else {
-			String message = "You are not authorized to view this page.";
-			return Response
-					.status(Response.Status.FORBIDDEN)
-					.entity(message)
-					.build();
+			if(Authorization.getUsername(request).equals(username)) {
+				UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
+				User user = dao.findByUsername(username);
+				User userData = new User(user.getUsername(),"",user.getFirstName(), user.getLastName(), user.getGender(), user.getRole());
+				return Response
+						.status(Response.Status.OK)
+						.entity(userData)
+						.build();
+			}			
 		}
+		String message = "You are not authorized to view this page.";
+		return Response
+				.status(Response.Status.FORBIDDEN)
+				.entity(message)
+				.build();
 	}
 	
 	@POST
