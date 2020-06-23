@@ -49,16 +49,25 @@ public class ApartmentDAO {
 	}
 
 	public Collection<Apartment> findAll() {
-		return apartments.values();
+		Collection<Apartment> apartmentsNotDeleted = new ArrayList<Apartment>();
+		for(Apartment apartment : apartments.values()) {
+			if(!apartment.getDeleted())
+				apartmentsNotDeleted.add(apartment);
+		}
+		return apartmentsNotDeleted;
 	}
 
 	public Apartment findById(Long id) {
-		return apartments.get(id);
+		Apartment apartment = apartments.get(id);
+		if(!apartment.getDeleted())
+			return apartment;
+		else
+			return null;
 	}
 
-	public Boolean save(String contextPath, Apartment apartment) {	
+	public Boolean save(String contextPath, Apartment apartment) {
 		Long locationId = locationDAO.save(contextPath, apartment.getLocation());
-		if(locationId != -1L) {
+		if (locationId != -1L) {
 			Long maxIdApartment = -1L;
 			for (Long id : apartments.keySet()) {
 				if (id > maxIdApartment) {
@@ -69,23 +78,23 @@ public class ApartmentDAO {
 			apartment.setId(maxIdApartment);
 			String apartmentCsv = maxIdApartment + ";" + apartment.getName() + ";" + apartment.getApartmentType() + ";"
 					+ apartment.getNumberOfRooms() + ";" + apartment.getCapacity() + ";" + locationId + ";"
-					+ apartment.getHost().getUsername() + ";" + apartment.getPrice() + ";" + apartment.getCheckIn() + ";"
-					+ apartment.getCheckOut() + ";false;false";
-			
+					+ apartment.getHost().getUsername() + ";" + apartment.getPrice() + ";" + apartment.getCheckIn()
+					+ ";" + apartment.getCheckOut() + ";false;false";
+
 			List<Amenity> amenities = apartment.getAmenities();
-			
+
 			String amenityApartmentCsv = "";
-			for(Amenity amenity : amenities) {
+			for (Amenity amenity : amenities) {
 				amenityApartmentCsv += maxIdApartment + ";" + amenity.getId() + "\r\n";
 			}
-			
+
 			try {
 				FileWriter fw = new FileWriter(contextPath + "/apartments.txt", true);
 				BufferedWriter bw = new BufferedWriter(fw);
 				PrintWriter out = new PrintWriter(bw);
 				out.println(apartmentCsv);
 				out.close();
-				
+
 				FileWriter fw2 = new FileWriter(contextPath + "/apartments_amenities.txt", true);
 				BufferedWriter bw2 = new BufferedWriter(fw2);
 				PrintWriter out2 = new PrintWriter(bw2);
@@ -100,7 +109,79 @@ public class ApartmentDAO {
 		}
 		return false;
 	}
-	
+
+	public Boolean updateApartmentInfo(String contextPath, Apartment newApartmentInfo) {
+		
+		Location newLocation = newApartmentInfo.getLocation();
+		Location location = locationDAO.findById(newLocation.getId());
+		Boolean newStreet = newLocation.getAddress().getStreet().equals(location.getAddress().getStreet()) ? false : true;
+		Boolean newCity = newLocation.getAddress().getCity().equals(location.getAddress().getCity()) ? false : true;
+		Boolean newPostalCode = newLocation.getAddress().getPostalCode().equals(location.getAddress().getPostalCode()) ? false : true;
+		Boolean newCountry = newLocation.getAddress().getCountry().equals(location.getAddress().getCountry()) ? false : true;
+		Boolean newLatitude = newLocation.getLatitude().equals(location.getAddress().getPostalCode()) ? false : true;
+		Boolean newLongitude = newLocation.getLongitude().equals(location.getAddress().getPostalCode()) ? false : true;
+
+		if(!(newStreet && newCity && newPostalCode && newCountry && newLatitude && newLongitude)) {
+			try {
+				File file = new File(contextPath + "/locations.txt");
+				BufferedReader reader = new BufferedReader(new FileReader(file));
+				String line = "", oldtext = "";
+				StringTokenizer st;
+				while ((line = reader.readLine()) != null) {
+					if (line.equals("") || line.indexOf('#') == 0)
+						continue;
+					st = new StringTokenizer(line, ";");
+					
+					Long id = Long.parseLong(st.nextToken().trim());
+
+					if (location.getId().equals(id)) {
+						oldtext += id + ";" + newApartmentInfo.getLocation().getLatitude() + ";" + newApartmentInfo.getLocation().getLongitude() + 
+								";" + newApartmentInfo.getLocation().getAddress().getStreet() + ";" + newApartmentInfo.getLocation().getAddress().getCity() +
+								";" + newApartmentInfo.getLocation().getAddress().getPostalCode() + ";" + newApartmentInfo.getLocation().getAddress().getCountry() + "\r\n";
+					} else {
+						oldtext += line  + "\r\n";
+					}
+					
+				}
+				reader.close();
+				FileWriter writer = new FileWriter(contextPath + "/locations.txt");
+				writer.write(oldtext);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}	
+		try {
+			File file = new File(contextPath + "/apartments.txt");
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line = "", oldtext = "";
+			StringTokenizer st;
+			while ((line = reader.readLine()) != null) {
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");			
+				Long id = Long.parseLong(st.nextToken().trim());
+				if (newApartmentInfo.getId().equals(id))
+					oldtext += newApartmentInfo.getId() + ";" + newApartmentInfo.getName() + ";" + newApartmentInfo.getApartmentType() + ";"
+							+ newApartmentInfo.getNumberOfRooms() + ";" + newApartmentInfo.getCapacity() + ";" + newApartmentInfo.getLocation().getId() + ";"
+							+ newApartmentInfo.getHost().getUsername() + ";" + newApartmentInfo.getPrice() + ";" + newApartmentInfo.getCheckIn() + ";"
+							+ newApartmentInfo.getCheckOut() + ";" + newApartmentInfo.getActive() + ";" + newApartmentInfo.getDeleted() + "\r\n";
+				else
+					oldtext += line  + "\r\n";
+				
+			}
+			reader.close();
+			FileWriter writer = new FileWriter(contextPath + "/apartments.txt");
+			writer.write(oldtext);
+			writer.close();			
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	private void loadApartments(String contextPath) {
 		System.out.println("loading apartments");
 		BufferedReader in = null;
@@ -196,7 +277,5 @@ public class ApartmentDAO {
 			}
 		}
 	}
-
-	
 
 }

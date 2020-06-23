@@ -19,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import beans.Amenity;
 import beans.Apartment;
 import beans.ApartmentTypeEnum;
 import beans.User;
@@ -132,10 +133,64 @@ public class ApartmentService {
 	public Response getApartment(@Context HttpServletRequest request, @PathParam("id") Long id) {
 			ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
 			Apartment apartment = dao.findById(id);
+			if(!apartment.getActive()) {
+				if(Authorization.getUserRole(request).equals("ADMIN") || (Authorization.getUserRole(request).equals("HOST")
+						&& Authorization.getUsername(request).equals(apartment.getHost().getUsername()))){
+					return Response
+						      .status(Response.Status.OK)
+						      .entity(apartment)
+						      .build();
+				
+				} else {
+					return Response
+						      .status(Response.Status.FORBIDDEN)
+						      .entity(null)
+						      .build();
+				}
+			}
 			return Response
 				      .status(Response.Status.OK)
 				      .entity(apartment)
 				      .build();
+			
+	}
+	
+	@POST
+	@Path("/update")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response updateApartmentInfo(@Context HttpServletRequest request, Apartment apartment) {
+		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST};
+		if(Authorization.authorizeUser(request, roles)) { 
+			if(Authorization.getUsername(request).equals(apartment.getHost().getUsername()) 
+					|| Authorization.getUserRole(request).equals("ADMIN")) {
+				ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");	
+				if(dao.findById(apartment.getId())==null) {
+					MsgResponse res = new MsgResponse(false, "Apartment doesn't exist.");
+					return Response
+							.status(Response.Status.NO_CONTENT)
+							.entity(res)
+							.build();
+				}
+				Boolean response = dao.updateApartmentInfo(ctx.getRealPath(""), apartment);
+				if(response) {
+					MsgResponse res = new MsgResponse(true, "Apartment info successfully updated.");
+					return Response
+							.status(Response.Status.OK)
+							.entity(res)
+							.build();
+				} else {
+					MsgResponse res = new MsgResponse(false, "Something went wrong.");
+					return Response
+							.status(Response.Status.BAD_REQUEST)
+							.entity(res)
+							.build();
+				}
+			} 
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
 	}
 	
 	@POST
