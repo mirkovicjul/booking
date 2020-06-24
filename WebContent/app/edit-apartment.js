@@ -1,15 +1,6 @@
-Vue.component("new-apartment", {
+Vue.component("edit-apartment", {
 	data: function () {
 		    return {
-		    	loggedIn: localStorage.getItem("jwt") ? true : false,
-    			cin: {
-	    			time: 2,
-	    			period: "PM"
-	    		},
-	    		cout: {
-	    			time: 11,
-	    			period: "AM"
-	    		},
 		    	apartment: {
 		    		name: "",
 		    		apartmentType: "",
@@ -30,8 +21,17 @@ Vue.component("new-apartment", {
 		    		},
 		    		amenities: []
 		    	},
+		    	cin: {
+	    			
+	    		},
+	    		cout: {
+	    			
+	    		},
 		    	apartmentTypes: [],
 		    	amenities: [],
+		    	disabledDates: {
+		    		ranges: []
+		    	},
 		    	fieldFocus: {
 		    		name: false,
 		    		type: false,
@@ -43,11 +43,9 @@ Vue.component("new-apartment", {
 		    		postalCode: false,
 		    		country: false,
 		    		latitude: false,
-		    		longitude: false
-		    		
+		    		longitude: false		    		
 		    	},
-		    	newApartmentResponse: {}
-		 
+		    	updateApartmentResponse: {}
 		    }
 	},
 	template: `
@@ -57,16 +55,16 @@ Vue.component("new-apartment", {
         <br>
         <br>
         <div id="big-form" class="well auth-box">
-        	<h4>Create new apartment</h4>
-        	<div v-if="newApartmentResponse.success"><small class="form-text text-success">
-					{{newApartmentResponse.message}}
+        	<h4>Edit apartment</h4>
+				<div v-if="updateApartmentResponse.success"><small class="form-text text-success">
+					{{updateApartmentResponse.message}}
 				</small></div>
-				<div v-if="!newApartmentResponse.success"><small class="form-text text-danger">
-					{{newApartmentResponse.message}}
+				<div v-if="!updateApartmentResponse.success"><small class="form-text text-danger">
+					{{updateApartmentResponse.message}}
 				</small>
 			</div>
 			<br>
-			
+
             <h5>Basic info</h5>
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label" for="textinput">Name:</label>
@@ -230,7 +228,7 @@ Vue.component("new-apartment", {
 
 		   	<div class="form-group">
                 <div class="">
-                     <button class="btn btn-info" v-on:click="create(apartment)" v-bind:disabled="!validateForm()">Create</button>
+                     <button class="btn btn-info" v-on:click="update(apartment)" v-bind:disabled="!validateForm()">Update</button>
                 </div>
             </div>	  
         </div>
@@ -242,6 +240,32 @@ Vue.component("new-apartment", {
 `
 	, 
 	methods : {
+		setParameters: function(params) {
+			console.log(params);
+			this.cin.time = params.checkIn.split(" ")[0];
+			this.cin.period = params.checkIn.split(" ")[1];
+			this.cout.time = params.checkOut.split(" ")[0];
+			this.cout.period = params.checkOut.split(" ")[1];
+			this.apartment = params;
+			if(params.amenities==null){
+				this.apartment.amenities = [];
+			}
+			
+			var i;
+			var dates = [];
+			if(params.disabledDates != null) {
+				for(i=0; i<params.disabledDates.length;i++){
+					var start = new Date(params.disabledDates[i].startDate);
+					var end = new Date(params.disabledDates[i].endDate);
+					var d = {
+							from: start,
+							to: end
+					}
+					dates.push(d);
+				}
+				this.disabledDates.ranges = dates;
+			}
+		},
 		setFieldFocus: function(field) {
 			switch(field){
 			case "name":
@@ -305,54 +329,20 @@ Vue.component("new-apartment", {
 			else
 				return true;
 		},
-		create: function(apartment) {
+		update: function(apartment){
 			console.log(apartment);
-			apartment.checkIn = this.cin.time + " " + this.cin.period;
-			apartment.checkOut = this.cout.time + " " + this.cout.period;
-			apartment.capacity = parseInt(apartment.capacity);
-			apartment.numberOfRooms = parseInt(apartment.numberOfRooms);
-			apartment.price = parseInt(apartment.price);
+			var myJSON = JSON.stringify(apartment);
+			console.log(myJSON);
 			axios
-	          .post('rest/apartment/add', apartment)
-	          .then(response => (this.newApartmentCheckResponse(response.data)));
+	          .post('rest/apartment/update', apartment)
+	          .then(response => (this.updateApartmentCheckResponse(response.data)));
 		},
-		newApartmentCheckResponse: function(response) {
-			this.newApartmentResponse = response;
-			if(this.newApartmentResponse.success){
-				this.apartment = {
-		    		name: "",
-		    		apartmentType: "",
-		    		numberOfRooms: null,
-		    		capacity: null,
-		    		price: null,
-		    		checkIn: "",
-		    		checkOut: "", 
-		    		location: {
-		    			latitude: "",
-		    			longitude: "",
-		    			address: {
-		    				street: "",
-		    				city: "",
-		    				postalCode: "",
-		    				country: ""
-		    			}
-		    		},
-		    		amenities: []
-		    	};
-				this.fieldFocus = {
-		    		name: false,
-		    		type: false,
-		    		rooms: false,
-		    		capacity: false,
-		    		price: false,
-		    		street: false,
-		    		city: false,
-		    		postalCode: false,
-		    		country: false,
-		    		latitude: false,
-		    		longitude: false
-		    		
-		    	}
+		updateApartmentCheckResponse: function(response) {
+			this.updateApartmentResponse = response;
+			if(response.success){
+				axios
+		        .get('rest/apartment/'+this.$route.params.id)
+		        .then(response => (this.setParameters(response.data)));
 			}
 		}
 	},
@@ -363,8 +353,15 @@ Vue.component("new-apartment", {
 		axios
         .get('rest/amenity/all')
         .then(response => (this.amenities = response.data));
+		axios
+        .get('rest/apartment/'+this.$route.params.id)
+        .then(response => (this.setParameters(response.data)));
+		
     },
     created() {
-    
+    	
+    },
+    components: {
+    	vuejsDatepicker
     }
 });

@@ -9,6 +9,10 @@ public class Comment {
 	private int rating;
 	private Boolean approved;
 	
+	public Comment() {
+		
+	}
+	
 	public Comment(Long id, Long apartmentId, User commentator, String comment, int rating, Boolean approved) {
 		super();
 		this.id = id;

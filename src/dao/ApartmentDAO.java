@@ -111,7 +111,6 @@ public class ApartmentDAO {
 	}
 
 	public Boolean updateApartmentInfo(String contextPath, Apartment newApartmentInfo) {
-		
 		Location newLocation = newApartmentInfo.getLocation();
 		Location location = locationDAO.findById(newLocation.getId());
 		Boolean newStreet = newLocation.getAddress().getStreet().equals(location.getAddress().getStreet()) ? false : true;
@@ -151,7 +150,8 @@ public class ApartmentDAO {
 				e.printStackTrace();
 				return false;
 			}
-		}	
+		}		
+		amenityDAO.updateAmenitiesByApartment(contextPath, newApartmentInfo);
 		try {
 			File file = new File(contextPath + "/apartments.txt");
 			BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -168,13 +168,13 @@ public class ApartmentDAO {
 							+ newApartmentInfo.getHost().getUsername() + ";" + newApartmentInfo.getPrice() + ";" + newApartmentInfo.getCheckIn() + ";"
 							+ newApartmentInfo.getCheckOut() + ";" + newApartmentInfo.getActive() + ";" + newApartmentInfo.getDeleted() + "\r\n";
 				else
-					oldtext += line  + "\r\n";
-				
+					oldtext += line  + "\r\n";				
 			}
 			reader.close();
 			FileWriter writer = new FileWriter(contextPath + "/apartments.txt");
 			writer.write(oldtext);
-			writer.close();			
+			writer.close();
+			loadApartments(contextPath);
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -183,7 +183,6 @@ public class ApartmentDAO {
 	}
 
 	private void loadApartments(String contextPath) {
-		System.out.println("loading apartments");
 		BufferedReader in = null;
 		try {
 			File file = new File(contextPath + "/apartments.txt");
