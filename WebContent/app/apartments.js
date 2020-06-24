@@ -24,7 +24,9 @@ Vue.component("apartments", {
 		  </div>
 		  <div class="col-xs-12 col-sm-12 col-md-4 ">
 		          <h2><a title=""  style="cursor: pointer;" :href="'#/apartment/'+apartment.id">{{apartment.name}}</a></h2>
-		          <a title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit</a>
+		          <div v-if="role=='HOST' || role=='ADMIN'">
+		          	<a  title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit</a>
+		          </div>
 		          <p>{{apartment.apartmentType}}</p>
 		          <p>Max guests: {{apartment.capacity}}</p>
 		          <p>Number of rooms: {{apartment.numberOfRooms}}</p>
@@ -60,6 +62,7 @@ Vue.component("apartments", {
 			  </div>
 			  <div class="col-xs-12 col-sm-12 col-md-4 ">
 			          <h2><a title=""  style="cursor: pointer;" :href="'#/apartment/'+apartment.id">{{apartment.name}}</a></h2>
+			          <a  title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit</a>      
 			          <p>{{apartment.apartmentType}}</p>
 			          <p>Max guests: {{apartment.capacity}}</p>
 			          <p>Number of rooms: {{apartment.numberOfRooms}}</p>

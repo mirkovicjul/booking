@@ -67,6 +67,18 @@ Vue.component("edit-apartment", {
 			<br>
 
             <h5>Basic info</h5>
+            <div class="form-group" v-if="role=='HOST'">   	
+                 <div>
+               		<div class="">
+	                    <div class="checkbox">
+	                       <label for="checkboxes-0">
+	                            <input name="checkboxes" id="checkboxes-0" true-value="true" false-value="false" v-model="apartment.active" type="checkbox"> Active
+	                        </label>
+	                    </div>
+	                </div>
+                 </div>
+            </div>
+            
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label" for="textinput">Name:</label>
                 <div class="">
@@ -223,8 +235,8 @@ Vue.component("edit-apartment", {
 	                            <input name="checkboxes" id="checkboxes-0" :value="amenity" v-model="apartment.amenities" type="checkbox"> {{amenity.name}}
 	                        </label>
 	                    </div>
-                </div>
-            </div>
+                	</div>
+            	</div>
             </div>
 
 		   	<div class="form-group">
