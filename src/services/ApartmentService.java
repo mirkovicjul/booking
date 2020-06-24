@@ -95,7 +95,19 @@ public class ApartmentService {
 					      .build();
 			}
 		}
-		return null;
+		
+		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+		Collection<Apartment> apartments = dao.findAll();
+		Collection<Apartment> activeApartments = new ArrayList<Apartment>();
+		for(Apartment a : apartments) {
+			if(a.getActive()) {
+				activeApartments.add(a);
+			}
+		}
+		return Response
+			      .status(Response.Status.OK)
+			      .entity(activeApartments)
+			      .build();
 	}
 	
 	@GET

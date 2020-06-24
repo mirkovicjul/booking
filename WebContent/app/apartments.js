@@ -11,7 +11,7 @@ Vue.component("apartments", {
 <br>
 <br>
   <h3 v-if="role=='HOST'">My active apartments</h3>
-  <div v-if="apartments.length==0">
+  <div v-if="apartments.length==0 && role=='HOST'">
        	<small class="form-text text-danger">
 			You don't have any active apartments.
 		</small>
