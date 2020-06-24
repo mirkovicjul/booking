@@ -1,6 +1,7 @@
 Vue.component("amenities", {
 	data: function () {
 		    return {
+		    	role: localStorage.getItem("role"),
 		    	amenities: [],
 		    	selectedAmenity: null,
 		    	mode: "",
@@ -166,9 +167,13 @@ Vue.component("amenities", {
 		}
 	},
 	mounted() {
-		axios
-        .get('rest/amenity/all')
-        .then(response => (this.amenities = response.data));
+		if(this.role != "ADMIN") {
+    		this.$router.push({ name: 'home' });
+		} else {
+			axios
+	        .get('rest/amenity/all')
+	        .then(response => (this.amenities = response.data));
+		}
     },
     created() {
     	

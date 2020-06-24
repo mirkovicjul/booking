@@ -1,6 +1,7 @@
 Vue.component("edit-apartment", {
 	data: function () {
 		    return {
+		    	role: localStorage.getItem("role"),
 		    	apartment: {
 		    		name: "",
 		    		apartmentType: "",
@@ -347,16 +348,19 @@ Vue.component("edit-apartment", {
 		}
 	},
 	mounted() {
-		axios
-        .get('rest/apartment/types')
-        .then(response => (this.apartmentTypes = response.data));
-		axios
-        .get('rest/amenity/all')
-        .then(response => (this.amenities = response.data));
-		axios
-        .get('rest/apartment/'+this.$route.params.id)
-        .then(response => (this.setParameters(response.data)));
-		
+		if(this.role != "ADMIN" && this.role != "HOST") {
+			this.$router.push({ name: 'home' });
+		} else {
+			axios
+	        .get('rest/apartment/types')
+	        .then(response => (this.apartmentTypes = response.data));
+			axios
+	        .get('rest/amenity/all')
+	        .then(response => (this.amenities = response.data));
+			axios
+	        .get('rest/apartment/'+this.$route.params.id)
+	        .then(response => (this.setParameters(response.data)));
+		}		
     },
     created() {
     	

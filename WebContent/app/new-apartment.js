@@ -2,6 +2,7 @@ Vue.component("new-apartment", {
 	data: function () {
 		    return {
 		    	loggedIn: localStorage.getItem("jwt") ? true : false,
+				role: localStorage.getItem("role"),
     			cin: {
 	    			time: 2,
 	    			period: "PM"
@@ -357,12 +358,16 @@ Vue.component("new-apartment", {
 		}
 	},
 	mounted() {
-		axios
-        .get('rest/apartment/types')
-        .then(response => (this.apartmentTypes = response.data));
-		axios
-        .get('rest/amenity/all')
-        .then(response => (this.amenities = response.data));
+		if(this.role != "HOST"){
+    		this.$router.push({ name: 'home' });
+		} else {
+			axios
+	        .get('rest/apartment/types')
+	        .then(response => (this.apartmentTypes = response.data));
+			axios
+	        .get('rest/amenity/all')
+	        .then(response => (this.amenities = response.data));
+		}
     },
     created() {
     
