@@ -11,8 +11,8 @@ Vue.component("registration", {
 		    		passwordConfirmation: ""
 		    	},
 		    	genders: null,
-		    	response: {
-		    		failed: null,
+		    	registrationResponse: {
+		    		success: null,
 		    		message: ""
 		    	},
 		    	usernameFieldFocus: null,
@@ -110,7 +110,7 @@ Vue.component("registration", {
                      <button class="btn btn-info" v-on:click="register(user)" v-bind:disabled="!validateForm()">Sign up</button>
                 </div>
             </div>
-            <div v-if="response.failed" class="alert alert-danger">
+            <div v-if="!registrationResponse.success" class="alert alert-danger">
 				{{response.message}}
             </div>
         </div>
@@ -165,7 +165,7 @@ Vue.component("registration", {
 		register: function(user) {
 			axios
 	          .post('rest/user/register', {"username":user.username, "password":user.password, "firstName":user.firstName, "lastName":user.lastName, "gender":user.gender})
-	          .then(response => (this.checkResponse(response)));
+	          .then(response => (this.checkResponse(response.data)));
 		},
 		login: function(user) {
 			axios
@@ -180,10 +180,9 @@ Vue.component("registration", {
 	          )
 		},
 		checkResponse: function(response) {
-			console.log(response.data);
-			if(response.data.failed){
-				this.response.failed = true;
-				this.response.message = response.data.message;
+			console.log(response);
+			if(!response.success){
+				this.registrationResponse = response;
 			} else {
 				this.login(response.data);
 			}

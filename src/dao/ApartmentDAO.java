@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import beans.ApartmentTypeEnum;
 import beans.Comment;
 import beans.DisabledDate;
 import beans.Location;
+import beans.Reservation;
 import beans.User;
 
 //csv format: apartment id;apartment name;apartment type;number of rooms;capacity;location id;host;price;check in;check out;active;deleted
@@ -182,6 +184,36 @@ public class ApartmentDAO {
 		}
 	}
 
+	public Boolean checkReservationAvailabilty(Apartment apartment, Reservation reservation) {
+		List<DisabledDate> disabled = apartment.getDisabledDates();
+		Date checkInDate = new Date(reservation.getStartDate());
+		Date checkOutDate = new Date(reservation.getEndDate());
+		Boolean available = true;
+		for(DisabledDate disabledDate : disabled) {
+			Date disabledStartDate = new Date(disabledDate.getStartDate());
+			Date disabledEndDate = new Date(disabledDate.getEndDate());
+			if((checkInDate.before(disabledStartDate) || checkInDate.equals(disabledStartDate))
+					&& (checkOutDate.after(disabledStartDate) || checkOutDate.equals(disabledStartDate))
+					&& (checkOutDate.before(disabledEndDate)) || checkOutDate.equals(disabledEndDate)) {
+				available = false;
+				System.out.println("======================= 1");
+				break;
+			} else if((checkInDate.before(disabledEndDate) || checkInDate.equals(disabledEndDate))
+					&& (checkOutDate.after(disabledEndDate) || checkOutDate.after(disabledEndDate))) {
+				available = false;
+				System.out.println("======================= 2");
+				break;
+			} else if((checkInDate.after(disabledStartDate) || checkInDate.after(disabledStartDate))
+					&& (checkOutDate.before(disabledEndDate) || checkOutDate.equals(disabledEndDate))) {
+				available = false;
+				System.out.println("======================= 3");
+
+				break;
+			}
+		}
+		return available;
+	}
+	
 	private void loadApartments(String contextPath) {
 		BufferedReader in = null;
 		try {

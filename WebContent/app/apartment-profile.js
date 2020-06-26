@@ -1,14 +1,35 @@
 Vue.component("apartment", {
 	data: function () {
 		    return {
+		    	role: localStorage.getItem("role"),
+		    	username: localStorage.getItem("user"),
 		    	apartment: {
 		    		location: {
 		    			address: {}
 		    		}
 		    	},
 		    	disabledDates: {
-		    		ranges: []
-		    	}
+		    		ranges: [],
+		    		to: null
+		    	},
+		    	disabledDatesCheckIn: {
+		    		ranges: [],
+		    		to: null,
+		    		from: null
+		    	},
+		    	disabledDatesCheckOut: {
+		    		ranges: [],
+		    		to: null
+		    	},
+		    	reservation: {
+		    		message: "",
+		    		price: null,
+		    	},
+		    	createReservationResponse: {},
+		    	price: null,
+		    	cin: null,
+		    	cout: null,
+		    	commentsShown: false
 		    }
 	},
 	template: `
@@ -41,12 +62,17 @@ Vue.component("apartment", {
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label" for="textinput">Number of rooms</label>
                 <label class="col-sm-2 col-form-label" for="textinput">{{apartment.numberOfRooms}}</label>
-            </div>    
+            </div>   
             
-             <div class="form-group row">
-                <label class="col-sm-2 col-form-label" for="textinput">Check-in </label>
-                <label class="col-sm-2 col-form-label" for="textinput">{{apartment.checkIn}}</label>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Price per night</label>
+                <label class="col-sm-2 col-form-label" for="textinput">€{{apartment.price}}</label>
             </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Check-in</label>
+                <label class="col-sm-2 col-form-label" for="textinput">{{apartment.checkIn}}</label>
+            </div> 
             
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label" for="textinput">Check-out </label>
@@ -55,47 +81,108 @@ Vue.component("apartment", {
         </div>
         <br>
         <br>
-        <table class="table  table-hover">
-          <thead>
-		    <tr>
-		      <th scope="col">Amenities</th>
-		    </tr>
-		  </thead>
-		  <tbody>
-		    <tr v-for="amenity in apartment.amenities">
-		      <td>{{amenity.name}}</td>      
-		    </tr>
-		  </tbody>
-		</table>
+        <div>
+	        <table  v-if="apartment.amenities != null" class="table  table-hover">
+	          	<thead>
+				    <tr>
+				      <th scope="col">Amenities</th>
+				    </tr>
+			  	</thead>
+			  
+			  	<tbody>
+				    <tr v-for="amenity in apartment.amenities">
+				      <td>{{amenity.name}}</td>      
+				    </tr>
+				</tbody>
+				
+			</table>
+			<div v-if="apartment.amenities==null">
+				<h5>Amenities</h5>
+		       	<small class="form-text text-danger">
+					This apartment doesn't have any amenities.
+				</small>
+			</div>
+		</div>
 		<br>
 		<br>
-		<div class="form-group row">
+		<div v-if="role!='GUEST'" class="form-group row">
                 <label class="col-sm-2 col-form-label" for="textinput">Availability</label>
                 <div>
-                	<vuejsDatepicker placeholder="Click to see the calendar" :disabled-dates="disabledDates"></vuejsDatepicker>
+                	<vuejsDatepicker v-model="cin" placeholder="Click to see the calendar" :disabled-dates="disabledDates"></vuejsDatepicker>
                 </div>
         </div>
+        <div v-if="role=='GUEST'">
+	        <div  class="form-group row">
+	        	<div class="col">
+	                <label for="textinput">Check-in date</label>
+	                <div v-on:focusout="setDisabledDatesCheckOut()">
+	                	<vuejsDatepicker v-model="cin" placeholder="Click to see the calendar" :disabled-dates="disabledDatesCheckIn" ></vuejsDatepicker>
+	                </div>
+	            </div>
+	            <div class="col">
+	                <label for="textinput">Check-out date</label>
+	                <div v-on:focusout="setDisabledDatesCheckIn()">
+	                	<vuejsDatepicker v-model="cout" placeholder="Click to see the calendar" :disabled-dates="disabledDatesCheckOut"></vuejsDatepicker>
+	                </div>
+	            </div>
+	        </div> 
+	        <br>
+	        <div v-if="price!=null" class="form-group row">
+	                <label class="col-sm-2 col-form-label" for="textinput"><h5>Total price</h5></label>
+	                <label class="col-sm-2 col-form-label"><h5>€{{price}}</h5></label>
+	        </div>
+	        <br>    
+	        <div class="form-group">
+			    <label for="exampleFormControlTextarea1">Say hi to your host!</label>
+			    <textarea v-model="reservation.message" class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+			</div>
+	        <div class="form-group">
+	                <div class="">
+	                     <button class="btn btn-info" v-on:click="createReservation()" v-bind:disabled="!validateForm()">Book</button>
+	                </div>
+	                <div v-if="createReservationResponse.success"><small class="form-text text-success">
+							{{createReservationResponse.message}}
+						</small></div>
+						<div v-if="!createReservationResponse.success"><small class="form-text text-danger">
+							{{createReservationResponse.message}}
+						</small>
+					</div>
+	        </div>
+	    </div>
+                
         <br>
-        <br>
-        <table class="table table-hover">
-          <thead>
-		    <tr>
-		      <th scope="col">User</th>
-		      <th scope="col">Comment</th>
-		      <th scope="col">Rating</th>
-		      <th scope="col">Approved</th>
-		    </tr>
-		  </thead>
-		  <tbody>
-		    <tr v-for="comment in apartment.comments">
-		      <td>{{comment.commentator.username}}</td>
-		      <td>{{comment.comment}}</td> 
-		      <td>{{comment.rating}}</td> 
-		      <td v-if="comment.approved">Yes</td>
-		      <td v-if="!comment.approved">No</td>         
-		    </tr>
-		  </tbody>
-		</table>
+        <div class="form-group">
+            <label class="asearch-label" for="selectbasic" v-on:click="showComments()">Comments
+                <img src='images/triangle_down.png' height="21" width="21" v-if="!commentsShown" />
+                <img src='images/triangle_up.png' height="21" width="21" v-if="commentsShown" />
+            </label>
+       </div>
+
+	    <div v-if="commentsShown">
+	        <table class="table table-hover">
+	          <thead>
+			    <tr>
+			      <th scope="col">User</th>
+			      <th scope="col">Comment</th>
+			      <th scope="col">Rating</th>
+			      <span v-if="role=='HOST' || role=='ADMIN'">
+			      	<th scope="col">Approved</th>
+			      </span>
+			    </tr>
+			  </thead>
+			  <tbody>
+			    <tr v-for="comment in apartment.comments">	    	
+				      <td>{{comment.commentator.username}}</td>
+				      <td>{{comment.comment}}</td> 
+				      <td>{{comment.rating}}</td> 
+				    <span v-if="role=='HOST' || role=='ADMIN'">
+				      <td v-if="comment.approved">Yes</td>
+				      <td v-if="!comment.approved">No</td>
+				    </span>         
+			    </tr>
+			  </tbody>
+			</table>
+		</div>
     </div>
 </div>
 `
@@ -106,18 +193,74 @@ Vue.component("apartment", {
 			this.apartment = params;
 			var i;
 			var dates = [];
+			var datesCheckOut = [];
 			if(params.disabledDates != null) {
 				for(i=0; i<params.disabledDates.length;i++){
 					var start = new Date(params.disabledDates[i].startDate);
 					var end = new Date(params.disabledDates[i].endDate);
+					var endCheckOut = new Date(end.getFullYear(),end.getMonth(),end.getDate()+1);
 					var d = {
 							from: start,
 							to: end
 					}
+					var dCheckOut = {
+							from: start,
+							to: endCheckOut
+					}
 					dates.push(d);
+					datesCheckOut.push(dCheckOut);				
 				}
 				this.disabledDates.ranges = dates;
+				this.disabledDatesCheckIn.ranges = dates;
+				this.disabledDatesCheckOut.ranges = datesCheckOut;
 			}
+			var to = new Date();
+			this.disabledDates.to = to;
+			this.disabledDatesCheckIn.to = to;
+			this.disabledDatesCheckOut.to = to;
+		},
+		setDisabledDatesCheckOut: function(){
+			if(this.cin != null){
+				var nextDay = new Date(this.cin.getFullYear(),this.cin.getMonth(),this.cin.getDate()+1);
+				this.disabledDatesCheckOut.to = nextDay;
+				for(var i=0; i<this.disabledDatesCheckOut.ranges.length; i++){
+					if(this.cin < this.disabledDatesCheckOut.ranges[i].from){
+						this.disabledDatesCheckOut.from = this.disabledDatesCheckOut.ranges[i].to;
+					}
+				}
+			}
+		},
+		setDisabledDatesCheckIn: function(){
+			if(this.cout != null){
+				var checkOutDate = new Date(this.cout.getFullYear(),this.cout.getMonth(),this.cout.getDate());
+				this.disabledDatesCheckIn.from = checkOutDate;
+			}
+		},
+		validateForm: function(){
+			if(this.cin==null)
+				return false;
+			else if(this.cout==null)
+				return false;
+			else if(this.reservation.message.trim()=="")
+				return false;
+			else
+				return true;
+		},
+		createReservation: function(){
+			this.reservation.startDate = this.cin.getTime();
+			this.reservation.endDate = this.cout.getTime(); 
+			this.reservation.apartmentId = this.apartment.id;
+			this.reservation.guest = this.username;
+			this.reservation.price = this.price;
+			var trimMessage = this.reservation.message.trim();
+			this.reservation.message = trimMessage;
+			console.log(this.reservation);
+			axios
+	          .post('rest/reservation/add', this.reservation)
+	          .then(response => (this.createReservationResponse = response.data));
+		},
+		showComments: function(){
+			this.commentsShown = !this.commentsShown;
 		}
 	},
 	mounted() {
@@ -128,6 +271,16 @@ Vue.component("apartment", {
     created() {
     	
     },
+    watch : {
+        cin: function(val) {
+        	if(this.cout != null)
+        		this.price = Math.round(Math.abs((this.cout - this.cin) / 86400000)) * this.apartment.price;
+        },
+        cout: function (val) {
+        	if(this.cin != null)
+        		this.price = Math.round(Math.abs((this.cout - this.cin) / 86400000)) * this.apartment.price;
+        }
+     },
     components: {
     	vuejsDatepicker
     }
