@@ -195,13 +195,15 @@ Vue.component("apartment", {
 			var dates = [];
 			var datesCheckOut = [];
 			if(params.disabledDates != null) {
+				console.log(params.disabledDates);
 				for(i=0; i<params.disabledDates.length;i++){
 					var start = new Date(params.disabledDates[i].startDate);
 					var end = new Date(params.disabledDates[i].endDate);
-					var endCheckOut = new Date(end.getFullYear(),end.getMonth(),end.getDate()+1);
+					var endCheckIn = new Date(end.getFullYear(),end.getMonth(),end.getDate()+1);
+					var endCheckOut = new Date(end.getFullYear(),end.getMonth(),end.getDate()+2);
 					var d = {
 							from: start,
-							to: end
+							to: endCheckIn
 					}
 					var dCheckOut = {
 							from: start,
@@ -223,11 +225,12 @@ Vue.component("apartment", {
 			if(this.cin != null){
 				var nextDay = new Date(this.cin.getFullYear(),this.cin.getMonth(),this.cin.getDate()+1);
 				this.disabledDatesCheckOut.to = nextDay;
-				for(var i=0; i<this.disabledDatesCheckOut.ranges.length; i++){
-					if(this.cin < this.disabledDatesCheckOut.ranges[i].from){
-						this.disabledDatesCheckOut.from = this.disabledDatesCheckOut.ranges[i].to;
-					}
-				}
+				var endDates = this.disabledDatesCheckOut
+				.ranges
+				.filter(d => this.cin < d.from)
+				.sort((a, b) => a < b);
+				if(endDates != undefined)		
+					this.disabledDatesCheckOut.from = endDates[0].from;
 			}
 		},
 		setDisabledDatesCheckIn: function(){

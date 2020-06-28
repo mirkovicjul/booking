@@ -29,6 +29,8 @@ public class ApartmentDAO {
 
 	private Map<Long, Apartment> apartments = new HashMap<>();
 
+	private Map<Long, DisabledDate> disabledDates = new HashMap<>();
+	
 	private LocationDAO locationDAO;
 
 	private UserDAO userDAO;
@@ -65,6 +67,15 @@ public class ApartmentDAO {
 			return apartment;
 		else
 			return null;
+	}
+	
+	public Collection<Apartment> findByHost(String hostUsername){
+		Collection<Apartment> apartmentsByHost = new ArrayList<Apartment>();
+		for(Apartment apartment : apartments.values()) {
+			if(apartment.getHost().getUsername().equals(hostUsername))
+				apartmentsByHost.add(apartment);
+		}
+		return apartmentsByHost;
 	}
 
 	public Boolean save(String contextPath, Apartment apartment) {
@@ -189,29 +200,61 @@ public class ApartmentDAO {
 		Date checkInDate = new Date(reservation.getStartDate());
 		Date checkOutDate = new Date(reservation.getEndDate());
 		Boolean available = true;
-		for(DisabledDate disabledDate : disabled) {
-			Date disabledStartDate = new Date(disabledDate.getStartDate());
-			Date disabledEndDate = new Date(disabledDate.getEndDate());
-			if((checkInDate.before(disabledStartDate) || checkInDate.equals(disabledStartDate))
-					&& (checkOutDate.after(disabledStartDate) || checkOutDate.equals(disabledStartDate))
-					&& (checkOutDate.before(disabledEndDate)) || checkOutDate.equals(disabledEndDate)) {
-				available = false;
-				System.out.println("======================= 1");
-				break;
-			} else if((checkInDate.before(disabledEndDate) || checkInDate.equals(disabledEndDate))
-					&& (checkOutDate.after(disabledEndDate) || checkOutDate.after(disabledEndDate))) {
-				available = false;
-				System.out.println("======================= 2");
-				break;
-			} else if((checkInDate.after(disabledStartDate) || checkInDate.after(disabledStartDate))
-					&& (checkOutDate.before(disabledEndDate) || checkOutDate.equals(disabledEndDate))) {
-				available = false;
-				System.out.println("======================= 3");
-
-				break;
+		if(disabled != null) {
+			for(DisabledDate disabledDate : disabled) {
+				Date disabledStartDate = new Date(disabledDate.getStartDate());
+				Date disabledEndDate = new Date(disabledDate.getEndDate());
+				if((checkInDate.before(disabledStartDate) || checkInDate.equals(disabledStartDate))
+						&& (checkOutDate.after(disabledStartDate) || checkOutDate.equals(disabledStartDate))
+						&& (checkOutDate.before(disabledEndDate)) || checkOutDate.equals(disabledEndDate)) {
+					available = false;
+					break;
+				} else if((checkInDate.before(disabledEndDate) || checkInDate.equals(disabledEndDate))
+						&& (checkOutDate.after(disabledEndDate) || checkOutDate.after(disabledEndDate))) {
+					available = false;
+					break;
+				} else if((checkInDate.after(disabledStartDate) || checkInDate.after(disabledStartDate))
+						&& (checkOutDate.before(disabledEndDate) || checkOutDate.equals(disabledEndDate))) {
+					available = false;
+					break;
+				}
 			}
 		}
 		return available;
+	}
+	
+	public Boolean addDisabledDate(String contextPath, DisabledDate disabledDate, Long apartmentId) {	
+		Apartment apartment = this.findById(apartmentId);
+		List<DisabledDate> disabledDatesByApartment;
+		if(apartment.getDisabledDates() != null) {
+			disabledDatesByApartment = apartment.getDisabledDates();
+		} else {
+			disabledDatesByApartment = new ArrayList<DisabledDate>();
+		}
+		Long maxId = -1L;
+		for (Long id : disabledDates.keySet()) {
+			if (id > maxId) {
+				maxId = id;
+			}
+		}
+		maxId++;
+		disabledDate.setId(maxId);
+		String disabledDateCsv = maxId + ";" + apartmentId + ";" + disabledDate.getStartDate() + ";" + disabledDate.getEndDate();
+
+		try {
+			FileWriter fw = new FileWriter(contextPath + "/disabled_dates.txt", true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter out = new PrintWriter(bw);
+			out.println(disabledDateCsv);
+			out.close();
+			disabledDatesByApartment.add(disabledDate);
+			apartment.setDisabledDates(disabledDatesByApartment);
+			disabledDates.put(maxId, disabledDate);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	private void loadApartments(String contextPath) {
@@ -284,6 +327,7 @@ public class ApartmentDAO {
 					Long apartmentId = Long.parseLong(st.nextToken().trim());
 					Long startDate = Long.parseLong(st.nextToken().trim());
 					Long endDate = Long.parseLong(st.nextToken().trim());
+					disabledDates.put(id, new DisabledDate(id, apartmentId, startDate, endDate));
 					if (disabledDatesByApartments.containsKey(apartmentId)) {
 						disabledDatesByApartments.get(apartmentId)
 								.add(new DisabledDate(id, apartmentId, startDate, endDate));

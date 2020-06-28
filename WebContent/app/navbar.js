@@ -23,6 +23,9 @@ Vue.component("navbar", {
       <li v-if="role=='ADMIN'" class="nav-item active">
         <a class="nav-link" href="#/amenities">Amenities</a>
       </li>
+      <li v-if="loggedIn" class="nav-item active">
+        <a class="nav-link" href="#/reservations">Reservations</a>
+      </li>
       <li v-if="role=='HOST'" class="nav-item active">
         <a class="nav-link" href="#/new-apartment">Add new apartment</a>
       </li>

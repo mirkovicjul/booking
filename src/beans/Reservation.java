@@ -21,6 +21,7 @@ public class Reservation {
 		this.id = id;
 		this.apartmentId = apartmentId;
 		this.guest = guest;
+		this.startDate = startDate;
 		this.endDate = endDate;
 		this.price = price;
 		this.message = message;

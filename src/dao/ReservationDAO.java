@@ -14,10 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import beans.Address;
-import beans.Amenity;
 import beans.Reservation;
 import beans.ReservationStatusEnum;
+import beans.dto.NewReservationStatus;
 
 public class ReservationDAO {
 	
@@ -29,6 +28,10 @@ public class ReservationDAO {
 	
 	public Reservation findById(Long id) {
 		return reservations.get(id);
+	}
+	
+	public Collection<Reservation> findAll() {
+		return reservations.values();
 	}
 	
 	public Collection<Reservation> getReservationsByApartment(Long apartmentId){
@@ -72,8 +75,7 @@ public class ReservationDAO {
 			}
 		}
 		maxIdReservation++;
-		
-		
+				
 		String reservationCsv = maxIdReservation + ";" + reservation.getApartmentId() + ";" + reservation.getGuest() + ";"
 				+ reservation.getStartDate() + ";" + reservation.getEndDate() + ";" + reservation.getPrice() + ";"
 				+ reservation.getMessage() + ";" + "CREATED";
@@ -84,8 +86,47 @@ public class ReservationDAO {
 			PrintWriter out = new PrintWriter(bw);
 			out.println(reservationCsv);
 			out.close();
+			reservation.setId(maxIdReservation);
 			reservation.setStatus(ReservationStatusEnum.valueOf("CREATED"));
 			reservations.put(maxIdReservation, reservation);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}	
+	}
+	
+	public Boolean updateReservationStatus(String contextPath, NewReservationStatus newStatus) {
+		try {
+			File file = new File(contextPath + "/reservations.txt");
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line = "", oldtext = "";
+			StringTokenizer st;
+			while ((line = reader.readLine()) != null) {
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");
+				while (st.hasMoreTokens()) {
+					Long id = Long.parseLong(st.nextToken().trim());
+					Long apartmentId = Long.parseLong(st.nextToken().trim());
+					String guest = st.nextToken().trim();
+					Long startDate = Long.parseLong(st.nextToken().trim());
+					Long endDate = Long.parseLong(st.nextToken().trim());
+					Long price = Long.parseLong(st.nextToken().trim());
+					String message = st.nextToken().trim();
+					String status = st.nextToken().trim();
+
+					if (newStatus.getReservationId().equals(id))
+						oldtext += id + ";" + apartmentId + ";" + guest + ";" + startDate + ";" + endDate + ";" + price  + ";" + message  + ";" + newStatus.getStatus() + "\r\n";
+					else
+						oldtext += line  + "\r\n";
+				}
+			}
+			reader.close();
+			FileWriter writer = new FileWriter(contextPath + "/reservations.txt");
+			writer.write(oldtext);
+			writer.close();
+			reservations.get(newStatus.getReservationId()).setStatus(newStatus.getStatus());
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -113,7 +154,7 @@ public class ReservationDAO {
 					Long endDate = Long.parseLong(st.nextToken().trim());
 					Long price = Long.parseLong(st.nextToken().trim());
 					String message = st.nextToken().trim();
-					String status = st.nextToken().trim();					
+					String status = st.nextToken().trim();		
 					reservations.put(id, new Reservation(id, apartmentId, guest, startDate, endDate, price, message, ReservationStatusEnum.valueOf(status)));
 				}
 			}
