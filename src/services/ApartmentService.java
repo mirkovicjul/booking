@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 
 import beans.Apartment;
 import beans.ApartmentTypeEnum;
+import beans.Comment;
 import beans.DisabledDate;
 import beans.User;
 import beans.UserRoleEnum;
@@ -259,6 +260,37 @@ public class ApartmentService {
 				MsgResponse res = new MsgResponse(false, "Something went wrong.");
 				return Response
 						.status(Response.Status.BAD_REQUEST)
+						.entity(res)
+						.build();
+			}
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
+	@POST
+	@Path("/comment")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response addComment(@Context HttpServletRequest request, Comment comment) {
+		UserRoleEnum[] roles = {UserRoleEnum.GUEST};
+		if(Authorization.authorizeUser(request, roles)) {
+			CommentDAO commentDAO = (CommentDAO) ctx.getAttribute("commentDAO");
+			Boolean commentSaved = commentDAO.save(ctx.getRealPath(""), comment);
+			if(commentSaved) {
+				ApartmentDAO apartmentDAO = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+				Apartment apartment = apartmentDAO.findById(comment.getApartmentId());
+				apartment.setComments(commentDAO.findByApartment(apartment.getId()));
+				MsgResponse res = new MsgResponse(true, "Comment successfully created.");
+				return Response
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			} else {
+				MsgResponse res = new MsgResponse(false, "Something went wrong.");
+				return Response
+						.status(Response.Status.INTERNAL_SERVER_ERROR)
 						.entity(res)
 						.build();
 			}

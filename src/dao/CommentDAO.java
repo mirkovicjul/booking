@@ -1,8 +1,12 @@
 package dao;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,6 +40,37 @@ public class CommentDAO {
 	
 	public List<Comment> findByApartment(Long apartmentId) {
 		return commentsByApartments.get(apartmentId);
+	}
+	
+	public Boolean save(String contextPath, Comment comment) {
+		Long maxId = -1L;
+		for (Long id : comments.keySet()) {
+			if (id > maxId) {
+				maxId = id;
+			}
+		}
+		maxId++;
+
+		String commentCsv = maxId + ";" + comment.getApartmentId() + ";" + comment.getCommentator().getUsername() + ";" + comment.getComment() + ";" + comment.getRating() + ";false";
+
+		try {
+			FileWriter fw = new FileWriter(contextPath + "/comments.txt", true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter out = new PrintWriter(bw);
+			out.println(commentCsv);
+			out.close();
+			Comment newComment = new Comment(maxId, comment.getApartmentId(), userDAO.findByUsername(comment.getCommentator().getUsername()), comment.getComment(), comment.getRating(), false);
+			comments.put(maxId, newComment);
+			for(Long id : commentsByApartments.keySet()) {
+				if(id.equals(comment.getApartmentId())) {
+					commentsByApartments.get(id).add(newComment);
+				}
+			}
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	private void loadComments(String contextPath) {
