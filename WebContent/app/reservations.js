@@ -122,9 +122,6 @@ Vue.component("reservations", {
 			return now > endDate;
 		},
 		leaveComment: function(reservation){
-			console.log(reservation);
-			console.log(this.comment);
-			console.log(this.rating);
 			var payload = {"apartmentId":reservation.apartmentId, "commentator":{"username": this.user}, "comment":this.comment, "rating":this.rating};
 			axios
 	        .post('rest/apartment/comment', payload)

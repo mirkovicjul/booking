@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 
 import beans.Comment;
 import beans.User;
+import beans.dto.CommentStatus;
 
 //csv format: comment id;apartment id;commentator username;comment;rating;approved
 public class CommentDAO {
@@ -34,6 +35,10 @@ public class CommentDAO {
 		loadComments(contextPath);
 	}
 
+	public Comment findById(Long id) {
+		return comments.get(id);
+	}
+	
 	public Collection<Comment> findAll() {
 		return comments.values();
 	}
@@ -64,6 +69,52 @@ public class CommentDAO {
 			for(Long id : commentsByApartments.keySet()) {
 				if(id.equals(comment.getApartmentId())) {
 					commentsByApartments.get(id).add(newComment);
+				}
+			}
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public Boolean updateCommentStatus(String contextPath, CommentStatus commentStatus) {
+		try {
+			File file = new File(contextPath + "/comments.txt");
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line = "", oldtext = "";
+			StringTokenizer st;
+			while ((line = reader.readLine()) != null) {
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");
+				while (st.hasMoreTokens()) {
+					Long id = Long.parseLong(st.nextToken().trim());
+					Long apartmentId = Long.parseLong(st.nextToken().trim());
+					String user = st.nextToken().trim();
+					String comment = st.nextToken().trim();
+					Long rating = Long.parseLong(st.nextToken().trim());
+					Boolean approved = Boolean.parseBoolean(st.nextToken().trim());
+					if (commentStatus.getCommentId().equals(id))
+						oldtext += id + ";" + apartmentId + ";" + user + ";" + comment + ";" + rating + ";" + commentStatus.getApproved() + "\r\n";
+					else
+						oldtext += line  + "\r\n";
+				}
+			}
+			reader.close();
+			FileWriter writer = new FileWriter(contextPath + "/comments.txt");
+			writer.write(oldtext);
+			writer.close();
+			for(Long id : comments.keySet()) {
+				if(id.equals(commentStatus.getCommentId())) {
+					(comments.get(id)).setApproved(commentStatus.getApproved());
+				}
+			}
+			for(Long apartmentId : commentsByApartments.keySet()) {
+				for(Comment comment : commentsByApartments.get(apartmentId)) {
+					if(comment.getId().equals(commentStatus.getCommentId())) {
+						comment.setApproved(commentStatus.getApproved());
+					}
 				}
 			}
 			return true;

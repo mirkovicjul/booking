@@ -25,6 +25,7 @@ import beans.Comment;
 import beans.DisabledDate;
 import beans.User;
 import beans.UserRoleEnum;
+import beans.dto.CommentStatus;
 import beans.dto.MsgResponse;
 import dao.AmenityDAO;
 import dao.ApartmentDAO;
@@ -298,6 +299,51 @@ public class ApartmentService {
 		return Response
 			      .status(Response.Status.FORBIDDEN)
 			      .build();
+	}
+	
+	@POST
+	@Path("/comment/update")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response updateComment(@Context HttpServletRequest request, CommentStatus commentStatus) {
+		UserRoleEnum[] roles = {UserRoleEnum.HOST};
+		if(Authorization.authorizeUser(request, roles)) {
+			CommentDAO commentDAO = (CommentDAO) ctx.getAttribute("commentDAO");
+			Boolean commentUpdated = commentDAO.updateCommentStatus(ctx.getRealPath(""), commentStatus);
+			if(commentUpdated) {
+				Comment comment = commentDAO.findById(commentStatus.getCommentId());
+				ApartmentDAO apartmentDAO = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+				Apartment apartment = apartmentDAO.findById(comment.getApartmentId());
+				apartment.setComments(commentDAO.findByApartment(apartment.getId()));
+				MsgResponse res = new MsgResponse(true, "Comment status successfully updated.");
+				return Response
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			} else {
+				MsgResponse res = new MsgResponse(false, "Something went wrong.");
+				return Response
+						.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(res)
+						.build();
+			}
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
+	@GET
+	@Path("/{id}/comment/all")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAllComments(@Context HttpServletRequest request, @PathParam("id") Long id) {
+		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+		Apartment apartment = dao.findById(id);
+		List<Comment> comments = apartment.getComments();
+				return Response
+					      .status(Response.Status.OK)
+					      .entity(comments)
+					      .build();
 	}
 	
 	@GET

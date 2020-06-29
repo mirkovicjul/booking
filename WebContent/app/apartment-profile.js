@@ -198,21 +198,20 @@ Vue.component("apartment", {
 			    <tr>
 			      <th scope="col">User</th>
 			      <th scope="col">Comment</th>
-			      <th scope="col">Rating</th>
-			      <span v-if="role=='HOST' || role=='ADMIN'">
-			      	<th scope="col">Approved</th>
-			      </span>
+			      <th scope="col">Rating</th>		      
+		      	  <th v-if="role=='HOST' || role=='ADMIN'" scope="col">Approved</th>     
+		      	  <th v-if="role=='HOST'"scope="col">Update</th>		      
 			    </tr>
 			  </thead>
 			  <tbody>
-			    <tr v-for="comment in apartment.comments">	    	
+			    <tr v-for="comment in apartment.comments" v-if="(comment.approved && (role=='GUEST' || role==null)) || (role=='HOST' || role=='ADMIN') || (comment.commentator.username==username)">
 				      <td>{{comment.commentator.username}}</td>
 				      <td>{{comment.comment}}</td> 
-				      <td>{{comment.rating}}</td> 
-				    <span v-if="role=='HOST' || role=='ADMIN'">
-				      <td v-if="comment.approved">Yes</td>
-				      <td v-if="!comment.approved">No</td>
-				    </span>         
+				      <td>{{comment.rating}}</td> 			
+				      <td v-if="comment.approved && (role=='HOST' || role=='ADMIN')">Yes</td>
+				      <td v-if="!comment.approved && (role=='HOST' || role=='ADMIN')">No</td>		
+				      <td v-if="comment.approved && role=='HOST'"><button type="button" class="btn btn-primary" v-on:click="approveComment(false, comment.id)">Disapprove</button></td>
+				      <td v-if="!comment.approved && role=='HOST'"><button type="button" class="btn btn-primary" v-on:click="approveComment(true, comment.id)">Approve</button></td>	     
 			    </tr>
 			  </tbody>
 			</table>
@@ -313,7 +312,21 @@ Vue.component("apartment", {
 		},
 		showComments: function(){
 			this.commentsShown = !this.commentsShown;
-		}
+		},
+		approveComment: function(approved, commentId){
+			var payload = {"commentId":commentId, "approved": approved};
+			axios
+	        .post('rest/apartment/comment/update', payload)
+	        .then(response => (this.checkUpdateCommentResponse(response.data)));
+		},
+		checkUpdateCommentResponse: function(response){
+			this.updateCommentResponse = response;
+			if(response.success){
+				axios
+		        .get('rest/apartment/'+this.$route.params.id+'/comment/all')
+		        .then(response => (this.apartment.comments = response.data));
+			}
+		},
 	},
 	mounted() {
 		axios
