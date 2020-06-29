@@ -1,6 +1,9 @@
 package services;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,10 +20,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import beans.Apartment;
+import beans.Reservation;
 import beans.User;
 import beans.UserGenderEnum;
 import beans.UserRoleEnum;
 import beans.dto.MsgResponse;
+import dao.ApartmentDAO;
+import dao.ReservationDAO;
 import dao.UserDAO;
 import misc.Authorization;
 
@@ -103,27 +110,63 @@ public class UserService {
 				.build();
 	}
 	
+	@GET
+	@Path("/all")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAllUsers(@Context HttpServletRequest request) {
+		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST};
+		if(Authorization.authorizeUser(request, roles)) { 
+			UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
+			ApartmentDAO apartmentDAO = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+			ReservationDAO reservationDAO = (ReservationDAO) ctx.getAttribute("reservationDAO");
+			Collection<User> allUsers = new ArrayList<User>();
+			if(Authorization.getUserRole(request).equals("ADMIN")){			
+				Collection<User> users = dao.findAll();			
+				for(User u : users) {
+					User newUser = new User(u.getUsername(), "", u.getFirstName(), u.getLastName(), u.getGender(), u.getRole());
+					allUsers.add(newUser);
+				}
+			} else {
+				Collection<Apartment> apartments = apartmentDAO.findByHost(Authorization.getUsername(request));
+				List<String> allUsernames = apartments.stream()
+				.flatMap(a -> reservationDAO.getReservationsByApartment(a.getId()).stream())
+				.map(r -> r.getGuest())
+				.distinct().collect(Collectors.toList());				
+				
+			
+				allUsers = allUsernames.stream()
+						.map(u -> Optional.ofNullable(dao.findByUsername(u)))
+						.filter(u -> u.isPresent())
+						.map(u -> u.get())
+						.collect(Collectors.toList());			
+			}
+			return Response
+				      .status(Response.Status.OK)
+				      .entity(allUsers)
+				      .build();
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
 	@POST
 	@Path("/update")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateUserInfo(User user) {
-		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-		
+		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");	
 		Boolean response = dao.updateUserInfo(ctx.getRealPath(""), user);
+		MsgResponse res;
 		if(response) {
-			MsgResponse res = new MsgResponse(true, "Profile information successfully updated.");
-			return Response
-					.status(Response.Status.OK)
-					.entity(res)
-					.build();
+			res = new MsgResponse(true, "Profile information successfully updated.");
 		} else {
-			MsgResponse res = new MsgResponse(false, "Something went wrong.");
-			return Response
-					.status(Response.Status.OK)
-					.entity(res)
-					.build();
+			res = new MsgResponse(false, "Something went wrong.");		
 		}
+		return Response
+				.status(Response.Status.OK)
+				.entity(res)
+				.build();
 	}
 	
 	@POST
@@ -131,22 +174,18 @@ public class UserService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updatePassword(User user) {
-		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-		
+		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");		
 		Boolean response = dao.updateUserPassword(ctx.getRealPath(""), user);
+		MsgResponse res;
 		if(response) {
-			MsgResponse res = new MsgResponse(true, "Password successfully updated.");
-			return Response
-					.status(Response.Status.OK)
-					.entity(res)
-					.build();
+			res = new MsgResponse(true, "Password successfully updated.");			
 		} else {
-			MsgResponse res = new MsgResponse(false, "Something went wrong.");
-			return Response
-					.status(Response.Status.OK)
-					.entity(res)
-					.build();
+			res = new MsgResponse(false, "Something went wrong.");		
 		}
+		return Response
+				.status(Response.Status.OK)
+				.entity(res)
+				.build();
 	}
 	
 }
