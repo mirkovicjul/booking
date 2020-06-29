@@ -223,8 +223,8 @@ public class ApartmentDAO {
 		return available;
 	}
 	
-	public Boolean addDisabledDate(String contextPath, DisabledDate disabledDate, Long apartmentId) {	
-		Apartment apartment = this.findById(apartmentId);
+	public Boolean addDisabledDate(String contextPath, DisabledDate disabledDate) {	
+		Apartment apartment = this.findById(disabledDate.getApartmentId());
 		List<DisabledDate> disabledDatesByApartment;
 		if(apartment.getDisabledDates() != null) {
 			disabledDatesByApartment = apartment.getDisabledDates();
@@ -239,7 +239,7 @@ public class ApartmentDAO {
 		}
 		maxId++;
 		disabledDate.setId(maxId);
-		String disabledDateCsv = maxId + ";" + apartmentId + ";" + disabledDate.getStartDate() + ";" + disabledDate.getEndDate();
+		String disabledDateCsv = maxId + ";" + disabledDate.getApartmentId() + ";" + disabledDate.getStartDate() + ";" + disabledDate.getEndDate();
 
 		try {
 			FileWriter fw = new FileWriter(contextPath + "/disabled_dates.txt", true);
@@ -294,6 +294,8 @@ public class ApartmentDAO {
 			for (Long apartmentId : apartments.keySet()) {
 				if (disabledDatesByApartments.containsKey(apartmentId)) {
 					apartments.get(apartmentId).setDisabledDates(disabledDatesByApartments.get(apartmentId));
+				} else {
+					apartments.get(apartmentId).setDisabledDates(new ArrayList<DisabledDate>());
 				}
 			}
 		} catch (Exception ex) {
@@ -309,7 +311,7 @@ public class ApartmentDAO {
 		}
 	}
 
-	private Map<Long, List<DisabledDate>> loadDisabledDatesByApartments(String contextPath) {
+	public Map<Long, List<DisabledDate>> loadDisabledDatesByApartments(String contextPath) {
 		Map<Long, List<DisabledDate>> disabledDatesByApartments = new HashMap<Long, List<DisabledDate>>();
 		BufferedReader in = null;
 		try {
@@ -338,6 +340,38 @@ public class ApartmentDAO {
 					}
 				}
 			}
+			in.close();
+			
+			File fileReservations = new File(contextPath + "/reservations.txt");
+			in = new BufferedReader(new FileReader(fileReservations));
+			while ((line = in.readLine()) != null) {
+				line = line.trim();
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");
+				while (st.hasMoreTokens()) {
+					Long id = Long.parseLong(st.nextToken().trim());
+					Long apartmentId = Long.parseLong(st.nextToken().trim());
+					String user = st.nextToken().trim();
+					Long startDate = Long.parseLong(st.nextToken().trim());
+					Long endDate = Long.parseLong(st.nextToken().trim());
+					Long price = Long.parseLong(st.nextToken().trim());
+					String message = st.nextToken().trim();
+					String status = st.nextToken().trim();
+					if(!status.equals("CANCELLED") && !status.equals("DECLINED")) {
+						disabledDates.put(id, new DisabledDate(id, apartmentId, startDate, endDate-86400000));
+						if (disabledDatesByApartments.containsKey(apartmentId)) {
+							disabledDatesByApartments.get(apartmentId)
+									.add(new DisabledDate(id, apartmentId, startDate, endDate-86400000));
+						} else {
+							List<DisabledDate> disabledDates = new ArrayList<DisabledDate>();
+							disabledDates.add(new DisabledDate(id, apartmentId, startDate, endDate-86400000));
+							disabledDatesByApartments.put(apartmentId, disabledDates);
+						}
+					}
+				}
+			}
+			
 			return disabledDatesByApartments;
 		} catch (Exception ex) {
 			ex.printStackTrace();

@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 
 import beans.Apartment;
 import beans.ApartmentTypeEnum;
+import beans.DisabledDate;
 import beans.User;
 import beans.UserRoleEnum;
 import beans.dto.MsgResponse;
@@ -222,6 +223,34 @@ public class ApartmentService {
 			Boolean response = dao.save(ctx.getRealPath(""), apartment);
 			if(response) {
 				MsgResponse res = new MsgResponse(true, "Apartment successfully created.");
+				return Response
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			} else {
+				MsgResponse res = new MsgResponse(false, "Something went wrong.");
+				return Response
+						.status(Response.Status.BAD_REQUEST)
+						.entity(res)
+						.build();
+			}
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
+	@POST
+	@Path("/disable")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response addDisabledDate(@Context HttpServletRequest request, DisabledDate disabledDate) {
+		UserRoleEnum[] roles = {UserRoleEnum.HOST};
+		if(Authorization.authorizeUser(request, roles)) {	
+			ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");	
+			Boolean response = dao.addDisabledDate(ctx.getRealPath(""), disabledDate);
+			if(response) {
+				MsgResponse res = new MsgResponse(true, "Apartment successfully disabled for selected dates.");
 				return Response
 						.status(Response.Status.OK)
 						.entity(res)

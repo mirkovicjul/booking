@@ -3,6 +3,7 @@ package services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Response;
 import beans.Apartment;
 import beans.DisabledDate;
 import beans.Reservation;
+import beans.ReservationStatusEnum;
 import beans.UserRoleEnum;
 import beans.dto.MsgResponse;
 import beans.dto.NewReservationStatus;
@@ -71,18 +73,24 @@ public class ReservationService {
 			
 			Boolean response = dao.save(ctx.getRealPath(""), reservation);
 			if(response) {
-				DisabledDate disabledDate = new DisabledDate();
-				disabledDate.setApartmentId(reservation.getApartmentId());
-				disabledDate.setStartDate(reservation.getStartDate());
-				disabledDate.setEndDate(reservation.getEndDate() - 86400000);
-				Boolean disabledDateSaved = apartmentDAO.addDisabledDate(ctx.getRealPath(""), disabledDate, reservation.getApartmentId());
-				if(disabledDateSaved) {
+				Map<Long, List<DisabledDate>> disabledDatesByApartments = apartmentDAO.loadDisabledDatesByApartments(ctx.getRealPath(""));
+				for(Long a : disabledDatesByApartments.keySet()) {
+					if(a.equals(apartment.getId())) {
+						apartment.setDisabledDates(disabledDatesByApartments.get(a));
+					}
+				}
+//				DisabledDate disabledDate = new DisabledDate();
+//				disabledDate.setApartmentId(reservation.getApartmentId());
+//				disabledDate.setStartDate(reservation.getStartDate());
+//				disabledDate.setEndDate(reservation.getEndDate() - 86400000);
+				//Boolean disabledDateSaved = apartmentDAO.addDisabledDate(ctx.getRealPath(""), disabledDate, reservation.getApartmentId());
+				//if(disabledDateSaved) {
 					MsgResponse res = new MsgResponse(true, "Your booking request was sent to the host.");
 					return Response
 							.status(Response.Status.OK)
 							.entity(res)
 							.build();
-				}
+				//}
 			} else {
 				MsgResponse res = new MsgResponse(false, "Something went wrong.");
 				return Response
@@ -142,40 +150,35 @@ public class ReservationService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateReservationStatus(@Context HttpServletRequest request, NewReservationStatus newStatus) {
 		UserRoleEnum[] roles = {UserRoleEnum.HOST, UserRoleEnum.GUEST};
-		if(Authorization.authorizeUser(request, roles)) {
-			
+		if(Authorization.authorizeUser(request, roles)) {			
 			ReservationDAO dao = (ReservationDAO) ctx.getAttribute("reservationDAO");
-			if(Authorization.getUserRole(request).equals("GUEST")) {		
-				Boolean updated = dao.updateReservationStatus(ctx.getRealPath(""), newStatus);
-				if(updated) {
-					MsgResponse res = new MsgResponse(true, "Reservation cancelled.");
-					return Response
-							.status(Response.Status.OK)
-							.entity(res)
-							.build();
-				} else {
-					MsgResponse res = new MsgResponse(false, "Something went wrong.");
-					return Response
-							.status(Response.Status.INTERNAL_SERVER_ERROR)
-							.entity(res)
-							.build();
-				}			
-			} else {
-				Boolean updated = dao.updateReservationStatus(ctx.getRealPath(""), newStatus);
-				if(updated) {
-					MsgResponse res = new MsgResponse(true, "Reservation status updated.");
-					return Response
-							.status(Response.Status.OK)
-							.entity(res)
-							.build();
-				} else {
-					MsgResponse res = new MsgResponse(false, "Something went wrong.");
-					return Response
-							.status(Response.Status.INTERNAL_SERVER_ERROR)
-							.entity(res)
-							.build();
+			ApartmentDAO apartmentDAO = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+			
+			Boolean updated = dao.updateReservationStatus(ctx.getRealPath(""), newStatus);
+			if(updated) {
+				if(newStatus.getStatus().equals(ReservationStatusEnum.CANCELLED) || newStatus.getStatus().equals(ReservationStatusEnum.DECLINED)) {
+					Map<Long, List<DisabledDate>> disabledDatesByApartments = apartmentDAO.loadDisabledDatesByApartments(ctx.getRealPath(""));
+					Long apartmentId = (dao.findById(newStatus.getReservationId())).getApartmentId();
+					Apartment apartment = apartmentDAO.findById(apartmentId);
+					for(Long a : disabledDatesByApartments.keySet()) {
+						if(a.equals(apartmentId)) {
+							apartment.setDisabledDates(disabledDatesByApartments.get(a));
+						}
+					}
 				}
-			}
+				MsgResponse res = new MsgResponse(true, "Reservation status updated.");
+				return Response 
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			} else {
+				MsgResponse res = new MsgResponse(false, "Something went wrong.");
+				return Response
+						.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(res)
+						.build();
+			}			
+			
 		
 		}
 		

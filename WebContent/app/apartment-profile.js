@@ -26,6 +26,7 @@ Vue.component("apartment", {
 		    		price: null,
 		    	},
 		    	createReservationResponse: {},
+		    	addDisabledDateResponse: {},
 		    	price: null,
 		    	cin: null,
 		    	cout: null,
@@ -148,8 +149,41 @@ Vue.component("apartment", {
 						</small>
 					</div>
 	        </div>
+	    </div>       
+        <div v-if="role=='HOST'">
+        	<h5>Disable apartment</h5>
+	        <div  class="form-group row">
+	        
+	        	<div class="col">
+	                <label for="textinput">Start date</label>
+	                <div v-on:focusout="setDisabledDatesCheckOut()">
+	                	<vuejsDatepicker v-model="cin" placeholder="Click to see the calendar" :disabled-dates="disabledDatesCheckIn" ></vuejsDatepicker>
+	                </div>
+	            </div>
+	            <div class="col">
+	                <label for="textinput">End date</label>
+	                <div v-on:focusout="setDisabledDatesCheckIn()">
+	                	<vuejsDatepicker v-model="cout" placeholder="Click to see the calendar" :disabled-dates="disabledDatesCheckOut"></vuejsDatepicker>
+	                </div>
+	            </div>
+	        </div> 
+
+	        <br>    
+
+	        <div class="form-group">
+	                <div class="">
+	                     <button class="btn btn-info" v-on:click="addDisabledDate()" v-bind:disabled="!validateForm()">Disable</button>
+	                </div>
+	                <div v-if="addDisabledDateResponse.success"><small class="form-text text-success">
+							{{addDisabledDateResponse.message}}
+						</small></div>
+						<div v-if="!addDisabledDateResponse.success"><small class="form-text text-danger">
+							{{addDisabledDateResponse.message}}
+						</small>
+					</div>
+	        </div>
 	    </div>
-                
+        
         <br>
         <div class="form-group">
             <label class="asearch-label" for="selectbasic" v-on:click="showComments()">Comments
@@ -229,8 +263,8 @@ Vue.component("apartment", {
 				.ranges
 				.filter(d => this.cin < d.from)
 				.sort((a, b) => a < b);
-				if(endDates != undefined)		
-					this.disabledDatesCheckOut.from = endDates[0].from;
+						
+				this.disabledDatesCheckOut.from = endDates[0].from;
 			}
 		},
 		setDisabledDatesCheckIn: function(){
@@ -244,7 +278,7 @@ Vue.component("apartment", {
 				return false;
 			else if(this.cout==null)
 				return false;
-			else if(this.reservation.message.trim()=="")
+			else if(this.role=="GUEST" && this.reservation.message.trim()=="")
 				return false;
 			else
 				return true;
@@ -261,6 +295,21 @@ Vue.component("apartment", {
 			axios
 	          .post('rest/reservation/add', this.reservation)
 	          .then(response => (this.createReservationResponse = response.data));
+		},
+		addDisabledDate: function(){
+			var startDate = this.cin.getTime();
+			var endDate = this.cout.getTime(); 
+			axios
+	          .post('rest/apartment/disable', {"apartmentId" : this.apartment.id, "startDate": startDate, "endDate": endDate})
+	          .then(response => (this.addDisabledDateCheckResponse(response.data)));
+		},
+		addDisabledDateCheckResponse: function(response){
+			this.addDisabledDateResponse = response;
+			if(response.success){
+				axios
+		        .get('rest/apartment/'+this.$route.params.id)
+		        .then(response => (this.setParameters(response.data)));
+			}
 		},
 		showComments: function(){
 			this.commentsShown = !this.commentsShown;
