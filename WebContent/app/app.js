@@ -30,8 +30,9 @@ const router = new VueRouter({
 	  ]
 });
 
+if(localStorage.getItem("jwt")!=null)
+	axios.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem("jwt")
 
-axios.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem("jwt")
 
 var app = new Vue({
 	router,

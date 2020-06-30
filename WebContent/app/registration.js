@@ -11,10 +11,7 @@ Vue.component("registration", {
 		    		passwordConfirmation: ""
 		    	},
 		    	genders: null,
-		    	registrationResponse: {
-		    		success: null,
-		    		message: ""
-		    	},
+		    	registrationResponse: {},
 		    	usernameFieldFocus: null,
 		    	firstNameFieldFocus: null,
 		    	lastNameFieldFocus: null,
@@ -181,12 +178,11 @@ Vue.component("registration", {
 				}
 	          )
 		},
-		checkResponse: function(response) {
-			console.log(response);
-			if(!response.success){
-				this.registrationResponse = response;
+		checkResponse: function(response) {		
+			if(response.success==null){
+				this.login(response);
 			} else {
-				this.login(response.data);
+				this.registrationResponse = response;
 			}
 		}
 	},

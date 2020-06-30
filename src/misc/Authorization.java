@@ -54,7 +54,7 @@ public class Authorization {
 				return null;
 			}
 		}
-		return null;
+		return "";
 	}
 	
 	public static String getUsername(HttpServletRequest request) {
@@ -71,7 +71,7 @@ public class Authorization {
 				return null;
 			}
 		}
-		return null;
+		return "";
 	}
 	
 	public static Key getKey() {
