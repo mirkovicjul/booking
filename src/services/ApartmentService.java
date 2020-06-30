@@ -31,6 +31,7 @@ import dao.AmenityDAO;
 import dao.ApartmentDAO;
 import dao.CommentDAO;
 import dao.LocationDAO;
+import dao.ReservationDAO;
 import dao.UserDAO;
 import misc.Authorization;
 
@@ -61,6 +62,10 @@ public class ApartmentService {
 		if (ctx.getAttribute("apartmentDAO") == null) {
 	    	String contextPath = ctx.getRealPath("");
 			ctx.setAttribute("apartmentDAO", new ApartmentDAO(contextPath, (LocationDAO) ctx.getAttribute("locationDAO"), (UserDAO) ctx.getAttribute("userDAO"), (CommentDAO) ctx.getAttribute("commentDAO"), (AmenityDAO) ctx.getAttribute("amenityDAO")));
+		}
+		if (ctx.getAttribute("reservationDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("reservationDAO", new ReservationDAO(contextPath));
 		}
 		
 	}

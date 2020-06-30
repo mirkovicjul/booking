@@ -21,12 +21,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import beans.Apartment;
-import beans.Reservation;
 import beans.User;
 import beans.UserGenderEnum;
 import beans.UserRoleEnum;
 import beans.dto.MsgResponse;
+import dao.AmenityDAO;
 import dao.ApartmentDAO;
+import dao.CommentDAO;
+import dao.LocationDAO;
 import dao.ReservationDAO;
 import dao.UserDAO;
 import misc.Authorization;
@@ -43,6 +45,26 @@ public class UserService {
 	    	String contextPath = ctx.getRealPath("");
 			ctx.setAttribute("userDAO", new UserDAO(contextPath));
 		}
+		if (ctx.getAttribute("locationDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("locationDAO", new LocationDAO(contextPath));
+		}
+		if (ctx.getAttribute("commentDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("commentDAO", new CommentDAO(contextPath, (UserDAO) ctx.getAttribute("userDAO")));
+		}
+		if (ctx.getAttribute("amenityDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("amenityDAO", new AmenityDAO(contextPath));
+		}
+		if (ctx.getAttribute("apartmentDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("apartmentDAO", new ApartmentDAO(contextPath, (LocationDAO) ctx.getAttribute("locationDAO"), (UserDAO) ctx.getAttribute("userDAO"), (CommentDAO) ctx.getAttribute("commentDAO"), (AmenityDAO) ctx.getAttribute("amenityDAO")));
+		}
+		if (ctx.getAttribute("reservationDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("reservationDAO", new ReservationDAO(contextPath));
+		}
 	}
 	
 	@POST
@@ -54,16 +76,18 @@ public class UserService {
 		if(dao.usernameAvailable(user.getUsername())) {
 			user.setRole(UserRoleEnum.GUEST);
 			User res = dao.save(ctx.getRealPath(""), user);
-			if(res != null)
+			if(res != null) {
 				return Response
 				      .status(Response.Status.OK)
 				      .entity(res)
 				      .build();
-			else
+			} else {
+				MsgResponse err = new MsgResponse(false, "Something went wrong. Please try again.");			      
 				return Response
-			      .status(Response.Status.OK)
-			      .entity("Something went wrong. Please try again.")
-			      .build();
+				      .status(Response.Status.INTERNAL_SERVER_ERROR)
+				      .entity(err)
+				      .build();
+			}
 		} else {
 			String msg = "Username already exists.";
 			MsgResponse err = new MsgResponse(false, msg);
@@ -132,13 +156,13 @@ public class UserService {
 				.flatMap(a -> reservationDAO.getReservationsByApartment(a.getId()).stream())
 				.map(r -> r.getGuest())
 				.distinct().collect(Collectors.toList());				
-				
-			
+						
 				allUsers = allUsernames.stream()
 						.map(u -> Optional.ofNullable(dao.findByUsername(u)))
 						.filter(u -> u.isPresent())
 						.map(u -> u.get())
-						.collect(Collectors.toList());			
+						.map(u -> new User(u.getUsername(), "", u.getFirstName(), u.getLastName(), u.getGender(), u.getRole()))
+						.collect(Collectors.toList());
 			}
 			return Response
 				      .status(Response.Status.OK)

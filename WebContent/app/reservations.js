@@ -31,7 +31,6 @@ Vue.component("reservations", {
 		      <th scope="col">Message</th>
 		      <th scope="col">Status</th>
 		      <th scope="col" colspan="2"></th>
-
 		    </tr>
 		  </thead>
 		  <tbody>
