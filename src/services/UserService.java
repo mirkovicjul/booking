@@ -71,31 +71,35 @@ public class UserService {
 	@Path("/register")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response register(User user) {
+	public Response register(@Context HttpServletRequest request, User user) {
 		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
+		MsgResponse response;
+		Response.Status status;
 		if(dao.usernameAvailable(user.getUsername())) {
-			user.setRole(UserRoleEnum.GUEST);
-			User res = dao.save(ctx.getRealPath(""), user);
-			if(res != null) {
-				return Response
-				      .status(Response.Status.OK)
-				      .entity(res)
-				      .build();
+			User newUser = dao.save(ctx.getRealPath(""), user);
+			if(newUser != null) {
+				if(Authorization.getUserRole(request).equals("ADMIN")) {
+					response = new MsgResponse(true, "New host added.");
+					status = Response.Status.OK;
+				} else {
+					return Response
+					      .status(Response.Status.OK)
+					      .entity(newUser)
+					      .build();
+				}
 			} else {
-				MsgResponse err = new MsgResponse(false, "Something went wrong. Please try again.");			      
-				return Response
-				      .status(Response.Status.INTERNAL_SERVER_ERROR)
-				      .entity(err)
-				      .build();
+				response = new MsgResponse(false, "Something went wrong. Please try again.");
+				status = Response.Status.INTERNAL_SERVER_ERROR;
 			}
-		} else {
-			String msg = "Username already exists.";
-			MsgResponse err = new MsgResponse(false, msg);
-			return Response
-			      .status(Response.Status.OK)
-			      .entity(err)
-			      .build();
+		} else {	
+			response = new MsgResponse(false, "Username already exists.");
+			status = Response.Status.OK;
 		}
+		return Response
+		      .status(status)
+		      .entity(response)
+		      .build();
+	
 	}
 	
 	@GET

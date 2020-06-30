@@ -1,7 +1,7 @@
-Vue.component("registration", {
+Vue.component("new-host", {
 	data: function () {
 		    return {
-		    	loggedIn: localStorage.getItem("jwt") ? true : false,
+		    	role: localStorage.getItem("role"),
 		    	user: {
 		    		username: "",
 		    		firstName: "",
@@ -11,9 +11,17 @@ Vue.component("registration", {
 		    		passwordConfirmation: ""
 		    	},
 		    	genders: null,
-		    	registrationResponse: {
+		    	newHostResponse: {
 		    		success: null,
 		    		message: ""
+		    	},
+		    	fieldFocus: {
+		    		username: null,
+		    		firstName: null,
+		    		lastName: null,
+		    		gender: null,
+		    		password: null,
+		    		passwordConfirmation: null
 		    	},
 		    	usernameFieldFocus: null,
 		    	firstNameFieldFocus: null,
@@ -30,11 +38,13 @@ Vue.component("registration", {
         <br>
         <br>
         <div id="big-form" class="well auth-box">
+        <h4>Add new host</h4>
+        <br>
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label" for="textinput">Username:</label>
                 <div class="">
                     <input name="username" class="form-control" type="text" v-model="user.username" v-on:focusout="setFieldFocus('username')" required>
-                	<div v-if="usernameFieldFocus && user.username.length==0">
+                	<div v-if="fieldFocus.username && user.username.length==0">
 	                   	<small class="form-text text-danger">
 							Username is required.
 						</small>
@@ -46,7 +56,7 @@ Vue.component("registration", {
                 <label class="col-sm-2 col-form-label" for="textinput">First name:</label>
                 <div class="">
                     <input name="firstName" class="form-control" type="text" v-model="user.firstName" v-on:focusout="setFieldFocus('firstName')" required>
-                	<div v-if="firstNameFieldFocus && user.firstName.length==0">
+                	<div v-if="fieldFocus.firstName && user.firstName.length==0">
 	                   	<small class="form-text text-danger">
 							First name is required.
 						</small>
@@ -58,7 +68,7 @@ Vue.component("registration", {
                 <label class="col-sm-2 col-form-label" for="textinput">Last name:</label>
                 <div class="">
                     <input name="lastName" class="form-control" type="text" v-model="user.lastName" v-on:focusout="setFieldFocus('lastName')" required>
-                	<div v-if="lastNameFieldFocus && user.lastName.length==0">
+                	<div v-if="fieldFocus.lastName && user.lastName.length==0">
 	                   	<small class="form-text text-danger">
 							Last name is required.
 						</small>
@@ -73,7 +83,7 @@ Vue.component("registration", {
 					  <option disabled value="">Please select one</option>
 					  <option v-for="gender in genders" :key="gender">{{gender}}</option>
 					</select>
-					<div v-if="genderFieldFocus && user.gender==null">
+					<div v-if="fieldFocus.gender && user.gender==null">
 	                   	<small class="form-text text-danger">
 							Gender is required.
 						</small>
@@ -85,7 +95,7 @@ Vue.component("registration", {
                 <label class="col-sm-2 col-form-label" for="textinput">Password:</label>
                 <div class="">
                     <input name="password" class="form-control" type="password" v-model="user.password" v-on:focusout="setFieldFocus('password')" required>
-                	<div v-if="passwordFieldFocus && user.password.length==0">
+                	<div v-if="fieldFocus.password && user.password.length==0">
 	                   	<small class="form-text text-danger">
 							Password is required.
 						</small>
@@ -97,7 +107,7 @@ Vue.component("registration", {
                 <label class="col-sm-2 col-form-label" for="textinput">Confirm password:</label>
                 <div class="">
                     <input name="passwordConfirmation" class="form-control" type="password" v-model="user.passwordConfirmation" v-on:focusin="setFieldFocus('passwordConfirmation')" required>
-                	<div v-if="passwordConfirmationFieldFocus && (user.passwordConfirmation.length==0 || user.password!=user.passwordConfirmation)">
+                	<div v-if="fieldFocus.passwordConfirmation && (user.passwordConfirmation.length==0 || user.password!=user.passwordConfirmation)">
                    	<small class="form-text text-danger">
 						Passwords need to match.
 					</small>
@@ -107,14 +117,16 @@ Vue.component("registration", {
            
             <div class="form-group">
                 <div class="">
-                     <button class="btn btn-info" v-on:click="register(user)" v-bind:disabled="!validateForm()">Sign up</button>
+                     <button class="btn btn-info" v-on:click="addNewHost(user)" v-bind:disabled="!validateForm()">Add</button>
                 </div>
             </div>
-            <div v-if="!registrationResponse.success">
-                <small class="form-text text-danger">
-					{{registrationResponse.message}}
-				</small>
-            </div>
+            <div v-if="newHostResponse.success"><small class="form-text text-success">
+				{{newHostResponse.message}}
+			</small></div>
+            <div v-if="!newHostResponse.success"><small class="form-text text-danger">
+					{{newHostResponse.message}}
+			</small></div>
+        
         </div>
         <br>
         <br>
@@ -127,22 +139,22 @@ Vue.component("registration", {
 		setFieldFocus: function(field) {
 			switch(field){
 			case "username":
-				this.usernameFieldFocus = true;
+				this.fieldFocus.username = true;
 				break;
 			case "firstName":
-				this.firstNameFieldFocus = true;
+				this.fieldFocus.firstName = true;
 				break;
 			case "lastName":
-				this.lastNameFieldFocus = true;
+				this.fieldFocus.lastName = true;
 				break;
 			case "gender":
-				this.genderFieldFocus = true;
+				this.fieldFocus.gender = true;
 				break;
 			case "password":
-				this.passwordFieldFocus = true;
+				this.fieldFocus.password = true;
 				break;
 			case "passwordConfirmation":
-				this.passwordConfirmationFieldFocus = true;
+				this.fieldFocus.passwordConfirmation = true;
 				break;
 			}
 		},
@@ -164,39 +176,45 @@ Vue.component("registration", {
 			else
 				return true;
 		},
-		register: function(user) {
+		addNewHost: function(user) {
 			axios
-	          .post('rest/user/register', {"username":user.username, "password":user.password, "firstName":user.firstName, "lastName":user.lastName, "gender":user.gender, "role":"GUEST"})
-	          .then(response => (this.checkResponse(response.data)));
+	          .post('rest/user/register', {"username":user.username, "password":user.password, "firstName":user.firstName, "lastName":user.lastName, "gender":user.gender, "role":"HOST"})
+	          .then(response => (this.checkAddNewHostResponse(response.data)));
 		},
-		login: function(user) {
-			axios
-	          .post('rest/login', {"username":user.username, "password":user.password})
-	          .then(function (response) {
-	        	  localStorage.setItem('jwt', response.data.jwt);
-	        	  localStorage.setItem('role', response.data.role);
-				  localStorage.setItem('user', response.data.username);
-				  window.location.reload();
-				  this.$router.push({ name: 'home' });
-				}
-	          )
-		},
-		checkResponse: function(response) {
-			console.log(response);
-			if(!response.success){
-				this.registrationResponse = response;
-			} else {
-				this.login(response.data);
+		checkAddNewHostResponse: function(response){
+			console.log(response)
+			this.newHostResponse = response;
+			if(response.success){
+				this.user = {
+		    		username: "",
+		    		firstName: "",
+		    		lastName: "",
+		    		gender: null,
+		    		password: "",
+		    		passwordConfirmation: ""
+		    	}
+				this.fieldFocus = {
+		    		username: null,
+		    		firstName: null,
+		    		lastName: null,
+		    		gender: null,
+		    		password: null,
+		    		passwordConfirmation: null
+		    	}
 			}
 		}
 	},
 	mounted() {
-		axios
-        .get('rest/user/genders')
-        .then(response => (this.genders = response.data));
+		if(this.role != "ADMIN") {
+    		this.$router.push({ name: 'home' });
+		} else {
+			axios
+	        .get('rest/user/genders')
+	        .then(response => (this.genders = response.data));
+		}
     },
     created() {
-    	if(this.loggedIn)
-    		this.$router.push({ name: 'home' });
+    	
     }
+
 });

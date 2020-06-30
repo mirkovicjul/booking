@@ -28,12 +28,20 @@ Vue.component("navbar", {
           <a v-if="role=='HOST'" class="dropdown-item" href="#/new-apartment">Add new apartment</a>
           <a v-if="role=='ADMIN'" class="dropdown-item" href="#/amenities">Amenities</a>
         </div>
-      </li>    
+      </li>   
+      
+      <li v-if="role=='HOST' || role=='ADMIN'" class="nav-item dropdown" >
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Users
+        </a>  
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#/users">All users</a>
+          <a v-if="role=='ADMIN'" class="dropdown-item" href="#/new-host">New host</a>
+        </div>       
+      </li>  
+      
       <li v-if="loggedIn" class="nav-item active">
         <a class="nav-link" href="#/reservations">Reservations</a>
-      </li>
-      <li v-if="role=='ADMIN' || role=='HOST'" class="nav-item active">
-        <a class="nav-link" href="#/users">Users</a>
       </li>
     </ul>
 

@@ -18,16 +18,10 @@ Vue.component("amenities", {
         <br>
         <br>
         <div id="big-form" class="well auth-box">
-        	<div class="form row">
-        		<div class="col">ID:</div>
-        		<div class="col">Name:</div>
-        	</div>
+			<h4>Amenities</h4>
         	<br>
 	        <div v-for="amenity in amenities" class="form row">
-	        	<br>
-	            <div class="col">
-	            	{{amenity.id}}
-	            </div>	            
+	        	<br>            
 	            <div class="col">
 	            	{{amenity.name}}
 	            </div>

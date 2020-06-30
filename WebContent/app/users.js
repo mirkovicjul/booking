@@ -8,6 +8,11 @@ Vue.component("users", {
 	template: `
 <div class="containerbody">
     <div class="container auth">
+    <br>
+    <br>
+    <br>
+    <h4>Users</h4>
+    <br>
 		<table class="table table-hover">
           <thead>
 		    <tr>
@@ -28,6 +33,7 @@ Vue.component("users", {
 		    </tr>
 		  </tbody>
 		</table>
+		
 	</div>
 </div>
 `

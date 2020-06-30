@@ -20,6 +20,11 @@ Vue.component("reservations", {
 	template: `
 <div class="containerbody">
     <div class="container auth">
+    <br>
+    <br>
+    <br>
+    <h4>Reservations</h4>
+    <br>
 		<table class="table table-hover">
           <thead>
 		    <tr>
