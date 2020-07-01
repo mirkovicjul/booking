@@ -3,6 +3,7 @@ package services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,6 +16,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -38,6 +40,10 @@ import misc.Authorization;
 @Path("/apartment")
 public class ApartmentService {
 
+	static<T> Predicate<T> not(Predicate<T> p) {
+	    return t -> !p.test(t);
+	}
+	
 	@Context
 	ServletContext ctx;
 
@@ -349,6 +355,70 @@ public class ApartmentService {
 					      .status(Response.Status.OK)
 					      .entity(comments)
 					      .build();
+	}
+	
+	@GET
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response searchApartments(@Context HttpServletRequest request, 
+			@QueryParam("location") String location,
+			@QueryParam("checkIn") Long checkIn,
+			@QueryParam("checkOut") Long checkOut,
+			@QueryParam("rooms") Long rooms,
+			@QueryParam("guests") Long guests,
+			@QueryParam("priceMin") Long priceMin,
+			@QueryParam("priceMax") Long priceMax) {
+		
+		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+		Collection<Apartment> apartments = dao.findAll();
+		
+		apartments = apartments.stream()
+				.filter(a -> a.getActive())
+				.collect(Collectors.toList());
+		
+		if(location != null) {
+			apartments = apartments.stream()
+				.filter(l -> l.getLocation().getAddress().getCity().contains(location) || l.getLocation().getAddress().getCountry().contains(location))
+				.collect(Collectors.toList());
+		}
+		
+		if(priceMin != null) {
+			apartments = apartments.stream()
+				.filter(a -> a.getPrice() >= priceMin)
+				.collect(Collectors.toList());
+		}
+		if(priceMax != null) {
+			apartments = apartments.stream()
+				.filter(a -> a.getPrice() <= priceMax)
+				.collect(Collectors.toList());
+		}
+		if(guests != null) {
+			apartments = apartments.stream()
+				.filter(a -> a.getCapacity() >= guests)
+				.collect(Collectors.toList());
+		}
+		if(rooms != null) {
+			apartments = apartments.stream()
+				.filter(a -> a.getNumberOfRooms() >= rooms)
+				.collect(Collectors.toList());
+		}
+		
+		if(checkIn != null && checkOut != null) {
+			apartments = apartments.stream()
+					.filter(apartment -> {
+							final List<DisabledDate> dates = apartment.getDisabledDates().stream()
+									.filter(d -> (d.getStartDate() <= checkIn && d.getEndDate() >= checkIn)
+											|| (d.getStartDate() >= checkIn && d.getEndDate() <= checkOut)
+											|| (d.getStartDate() <= checkOut && d.getEndDate() >= checkOut))
+									.collect(Collectors.toList());
+							return dates.isEmpty();
+					}).collect(Collectors.toList());			
+		}
+		
+		return Response
+			      .status(Response.Status.OK)
+			      .entity(apartments)
+			      .build();
 	}
 	
 	@GET

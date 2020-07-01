@@ -11,11 +11,13 @@ const EditApartment = { template: '<edit-apartment></edit-apartment>'}
 const Reservations = { template: '<reservations></reservations>'}
 const Users = { template: '<users></users>'}
 const NewHost = { template: '<new-host></new-host>'}
+const Search = { template: '<search></search>'}
 
 const router = new VueRouter({
 	  mode: 'hash',
 	  routes: [
-	    { path: '/', name: 'home', component: Home},
+	    { path: '/search', name: 'search', component: Search},
+	    { path: '/', name: 'search', component: Search},
 	    { path: '/login', name: 'login', component: Login},
 	    { path: '/register', name: 'registration', component: Registration},
 	    { path: '/account', name: 'account', component: Account},

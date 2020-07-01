@@ -7,7 +7,7 @@ Vue.component("navbar", {
 	},
 	template: ` 
 <nav class="navbar navbar-expand-lg  navbar-dark bg-primary">
-  <a class="navbar-brand" href="#/">
+  <a class="navbar-brand" href="#/search" v-on:click="restartParams()">
     <img src="images/logo.png" width="30" height="30" alt="">
   </a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,11 @@ Vue.component("navbar", {
 			localStorage.removeItem('user');
 			this.loggedIn = false;
 			this.role = "";
+		},
+		restartParams: function(){
+			this.$root.$emit('restartParams', '')
 		}
+
 	},
 	mounted() {
 
