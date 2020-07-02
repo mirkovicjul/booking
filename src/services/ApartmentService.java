@@ -372,9 +372,16 @@ public class ApartmentService {
 		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
 		Collection<Apartment> apartments = dao.findAll();
 		
-		apartments = apartments.stream()
-				.filter(a -> a.getActive())
-				.collect(Collectors.toList());
+		if(Authorization.getUserRole(request).equals("GUEST") || Authorization.getUserRole(request).equals("")) {
+			apartments = apartments.stream()
+					.filter(a -> a.getActive())
+					.collect(Collectors.toList());
+		} else if(Authorization.getUserRole(request).equals("HOST")) {
+			apartments = dao.findByHost(Authorization.getUsername(request));
+			apartments = apartments.stream()
+					.filter(a -> a.getActive())
+					.collect(Collectors.toList());
+		}
 		
 		if(location != null) {
 			apartments = apartments.stream()

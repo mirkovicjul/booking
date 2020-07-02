@@ -18,7 +18,8 @@ Vue.component("search", {
 	    			
 	    		},
 	    		searchResults: false,
-	    		apartments: []
+	    		apartments: [],
+	    		noMatchingApartments: false
 		    }
 	},
 	template: `
@@ -89,7 +90,20 @@ Vue.component("search", {
         </div>
         <div class="clearfix"></div>
     </div>
-    <div v-if="searchResults" class="container">
+    <div v-if="searchResults && !noMatchingApartments" class="container">
+		<div class="dropdown">
+		  <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		    Sort by
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+		    <a class="dropdown-item" v-on:click="orderBy('price', 'ascending')">Price (ascending)</a>
+		    <a class="dropdown-item" v-on:click="orderBy('price', 'descending')">Price (descending)</a>
+		    <a class="dropdown-item" v-on:click="orderBy('rooms', 'ascending')">Number of rooms (ascending)</a>
+		    <a class="dropdown-item" v-on:click="orderBy('rooms', 'descending')">Number of rooms (descending)</a>
+		    <a class="dropdown-item" v-on:click="orderBy('capacity', 'ascending')">Max guests (ascending)</a>
+		    <a class="dropdown-item" v-on:click="orderBy('capacity', 'descending')">Max guests (descending)</a>
+		  </div>
+		</div>
 	    <section class="col-xs-12 col-sm-6 col-md-12">
 	    <div v-for="apartment in apartments">
 	      <article class="search-result row">
@@ -104,6 +118,7 @@ Vue.component("search", {
 			          <p>{{apartment.apartmentType}}</p>
 			          <p>Max guests: {{apartment.capacity}}</p>
 			          <p>Number of rooms: {{apartment.numberOfRooms}}</p>
+			          <p>Price: €{{apartment.price}}/night</p>
 			          <div v-if="role=='ADMIN'"><p v-if="apartment.active">Active</p>
 			          <p v-if="!apartment.active">Not active</p></div>
 			  </div>
@@ -120,6 +135,11 @@ Vue.component("search", {
 	    </div>
 	  </section>
     </div>
+    <div v-if="noMatchingApartments" class="container auth">
+		       	<small class="form-text text-danger">
+					No matching results found.
+				</small>
+	</div>
 </div>
 `
 	, 
@@ -166,7 +186,38 @@ Vue.component("search", {
 			console.log(response)
 			this.searchResults = true;
 			this.apartments = response;
-		}		
+			if(this.apartments.length==0){
+				this.noMatchingApartments = true;
+			}
+		},
+		orderBy: function(param, order){			
+			if(param=="price" && order=="ascending"){
+				this.apartments = this.apartments.sort(function(a, b) {
+				    return parseFloat(a.price) - parseFloat(b.price);
+				});
+			} else if(param=="price" && order=="descending"){
+				this.apartments = this.apartments.sort(function(a, b) {
+				    return parseFloat(b.price) - parseFloat(a.price);
+				});
+			} else if(param=="rooms" && order=="ascending"){
+				this.apartments = this.apartments.sort(function(a, b) {
+				    return parseFloat(a.numberOfRooms) - parseFloat(b.numberOfRooms);
+				});
+			} else if(param=="rooms" && order=="descending"){
+				this.apartments = this.apartments.sort(function(a, b) {
+				    return parseFloat(b.numberOfRooms) - parseFloat(a.numberOfRooms);
+				});
+			} else if(param=="capacity" && order=="ascending"){
+				this.apartments = this.apartments.sort(function(a, b) {
+				    return parseFloat(a.capacity) - parseFloat(b.capacity);
+				});
+			} else if(param=="capacity" && order=="descending"){
+				this.apartments = this.apartments.sort(function(a, b) {
+				    return parseFloat(b.capacity) - parseFloat(a.capacity);
+				});
+			}
+			
+		}
 	},
 	mounted() {
 		this.$root.$on('restartParams', () => {
