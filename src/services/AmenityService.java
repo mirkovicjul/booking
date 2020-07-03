@@ -39,7 +39,7 @@ public class AmenityService {
 	@Path("/all")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAmenities(@Context HttpServletRequest request) {
-		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST};
+		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST, UserRoleEnum.GUEST};
 		if(Authorization.authorizeUser(request, roles)) { 
 			AmenityDAO dao = (AmenityDAO) ctx.getAttribute("amenityDAO");
 			Collection<Amenity> allAmenities = dao.findAll();

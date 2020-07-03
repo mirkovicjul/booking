@@ -9,10 +9,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 import beans.Amenity;
 import beans.Apartment;
@@ -42,7 +45,7 @@ public class AmenityDAO {
 	}
 
 	public List<Amenity> findByApartment(Long id) {
-		return amenitiesByApartments.get(id);
+		return Optional.ofNullable(amenitiesByApartments.get(id)).orElseGet(() -> new ArrayList<Amenity>());
 	}
 
 	public Boolean save(String contextPath, Amenity amenity) {

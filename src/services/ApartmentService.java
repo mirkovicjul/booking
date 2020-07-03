@@ -1,6 +1,7 @@
 package services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -367,8 +368,12 @@ public class ApartmentService {
 			@QueryParam("rooms") Long rooms,
 			@QueryParam("guests") Long guests,
 			@QueryParam("priceMin") Long priceMin,
-			@QueryParam("priceMax") Long priceMax) {
+			@QueryParam("priceMax") Long priceMax,
+			@QueryParam("type") String type,
+			@QueryParam("status") String status,
+			@QueryParam("amenities") String amenityIds) {
 		
+
 		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
 		Collection<Apartment> apartments = dao.findAll();
 		
@@ -420,6 +425,37 @@ public class ApartmentService {
 									.collect(Collectors.toList());
 							return dates.isEmpty();
 					}).collect(Collectors.toList());			
+		}
+		
+		if(type != null) {
+			apartments = apartments.stream()
+					.filter(a -> a.getApartmentType().equals(ApartmentTypeEnum.valueOf(type)))
+					.collect(Collectors.toList());
+		}
+		
+		if(status != null) {
+			apartments = apartments.stream()
+					.filter(a -> String.valueOf(a.getActive()).equals(status))
+					.collect(Collectors.toList());
+		}
+		
+		if(amenityIds != null) {
+			List<String> amenities = Arrays.asList(amenityIds.split(","));
+			List<Long> queryAmenityIds;
+			queryAmenityIds = amenities.stream()
+					.map(a -> Long.parseLong(a))
+					.collect(Collectors.toList());
+			
+			apartments = apartments.stream()
+				.filter(apartment -> 
+					queryAmenityIds.stream()
+						.map(queryAmenityId -> apartment.getAmenities().stream()
+													.map(a -> a.getId())
+													.anyMatch(apartmentAmenityId -> apartmentAmenityId.equals(queryAmenityId)))
+						.allMatch(b -> b)
+				)
+				.collect(Collectors.toList());
+			
 		}
 		
 		return Response
