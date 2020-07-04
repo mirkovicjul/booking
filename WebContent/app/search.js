@@ -11,12 +11,15 @@ Vue.component("search", {
 		    		checkOut: null, 
 		    		location: ""
 		    		},
-		    	cin: {
-	    			
-	    		},
-	    		cout: {
-	    			
-	    		},
+		    	cin: {},
+	    		cout: {},
+		    	disabledDatesCheckIn: {
+		    		to: null,
+		    		from: null
+		    	},
+		    	disabledDatesCheckOut: {
+		    		to: null
+		    	},
 	    		searchUrl: "search?",
 	    		searchFilterUrl: "search?",
 	    		searchResults: false,
@@ -58,15 +61,15 @@ Vue.component("search", {
                 	
                     <div  class="form-group row">		        	
 		                <label class="col-sm-2 col-form-label" for="textinput">Check-in date:</label>
-		                <div class="">
-		                	<vuejsDatepicker v-model="apartment.checkIn" placeholder="Click to see the calendar" ></vuejsDatepicker>
+		                <div class="" v-on:focusout="setDisabledDatesCheckOut()">
+		                	<vuejsDatepicker v-model="apartment.checkIn" placeholder="Click to see the calendar" :disabled-dates="disabledDatesCheckIn"></vuejsDatepicker>
 		                </div>		            
 			        </div>
 			        
 			        <div  class="form-group row">		            
 		                <label class="col-sm-2 col-form-label" for="textinput">Check-out date:</label>
-		                <div class="">
-		                	<vuejsDatepicker v-model="apartment.checkOut" placeholder="Click to see the calendar"></vuejsDatepicker>
+		                <div class="" v-on:focusout="setDisabledDatesCheckIn()">
+		                	<vuejsDatepicker v-model="apartment.checkOut" placeholder="Click to see the calendar" :disabled-dates="disabledDatesCheckOut"></vuejsDatepicker>
 		                </div>						
 	        		</div> 
 
@@ -205,6 +208,18 @@ Vue.component("search", {
 `
 	, 
 	methods : {
+		setDisabledDatesCheckOut: function(){
+			if(this.apartment.checkIn != null){
+				var nextDay = new Date(this.apartment.checkIn.getFullYear(),this.apartment.checkIn.getMonth(),this.apartment.checkIn.getDate()+1);
+				this.disabledDatesCheckOut.to = nextDay;
+			}
+		},
+		setDisabledDatesCheckIn: function(){
+			if(this.apartment.checkOut != null){
+				var checkOutDate = new Date(this.apartment.checkOut.getFullYear(),this.apartment.checkOut.getMonth(),this.apartment.checkOut.getDate());
+				this.disabledDatesCheckIn.from = checkOutDate;
+			}
+		},
 		search: function(params){
 			var searchUrl = "search?";
 			var query = {};
@@ -389,6 +404,10 @@ Vue.component("search", {
     		this.filterStatusInactive = false			
 		});
 		
+		var to = new Date();
+		this.disabledDatesCheckIn.to = to;	
+		this.disabledDatesCheckOut.to = to;
+
 		var params = false;
 		if(this.$route.query.location!=null){
 			this.searchUrl = this.searchUrl + '&location=' + this.$route.query.location;
