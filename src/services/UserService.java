@@ -16,6 +16,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -107,6 +108,19 @@ public class UserService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getGenders() {
 		List<String> enumNames = Stream.of(UserGenderEnum.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+		return Response
+			      .status(Response.Status.OK)
+			      .entity(enumNames)
+			      .build();
+	}
+	
+	@GET
+	@Path("/roles")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getRoles() {
+		List<String> enumNames = Stream.of(UserRoleEnum.values())
                 .map(Enum::name)
                 .collect(Collectors.toList());
 		return Response
@@ -216,4 +230,46 @@ public class UserService {
 				.build();
 	}
 	
+	@SuppressWarnings("unchecked")
+	@GET
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response searchUsers(@Context HttpServletRequest request, 
+			@QueryParam("username") String username,
+			@QueryParam("role") String role,
+			@QueryParam("gender") String gender) {
+		
+		UserRoleEnum[] roles = {UserRoleEnum.HOST, UserRoleEnum.ADMIN};
+		if(Authorization.authorizeUser(request, roles)) {				
+			Response res = this.getAllUsers(request);
+			Collection<User> allUsers = (Collection<User>) res.getEntity();
+			
+			if(username != null) {
+				allUsers = allUsers.stream()
+									.filter(u -> u.getUsername().contains(username))
+									.collect(Collectors.toList());
+			}
+			if(gender != null) {
+				allUsers = allUsers.stream()
+									.filter(u -> u.getGender().equals(UserGenderEnum.valueOf(gender)))
+									.collect(Collectors.toList());
+			}
+			if(role != null) {
+				allUsers = allUsers.stream()
+									.filter(u -> u.getRole().equals(UserRoleEnum.valueOf(role)))
+									.collect(Collectors.toList());
+			}
+			
+			return Response
+				      .status(Response.Status.OK)
+				      .entity(allUsers)
+				      .build();
+		}
+		MsgResponse res = new MsgResponse(false, "You are not authorized to see this page.");
+		return Response
+				.status(Response.Status.FORBIDDEN)
+				.entity(res)
+				.build();
+	
+	}
 }
