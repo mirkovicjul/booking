@@ -205,7 +205,7 @@ public class ReservationService {
 			@QueryParam("type") String type,
 			@QueryParam("status") String statuses) {
 		
-		UserRoleEnum[] roles = {UserRoleEnum.GUEST, UserRoleEnum.HOST, UserRoleEnum.ADMIN};
+		UserRoleEnum[] roles = {UserRoleEnum.HOST, UserRoleEnum.ADMIN};
 		if(Authorization.authorizeUser(request, roles)) {
 			ReservationDAO dao = (ReservationDAO) ctx.getAttribute("reservationDAO");
 			ApartmentDAO apartmentDAO = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
@@ -218,11 +218,8 @@ public class ReservationService {
 				}
 				reservations = dao.getReservationsByHost(apartmentIds);				
 			} else if (Authorization.getUserRole(request).equals("ADMIN")) {
-				reservations = dao.findAll();
-			
-			} else {
-				reservations = dao.getReservationsByGuest(Authorization.getUsername(request));			
-			}
+				reservations = dao.findAll();		
+			} 
 			
 			if(statuses != null) {
 				List<String> statusesList = Arrays.asList(statuses.split(","));
