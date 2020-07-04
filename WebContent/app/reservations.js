@@ -14,18 +14,58 @@ Vue.component("reservations", {
 		    	apartments: [],
 		    	comment: "",
 		    	rating: null,
-		    	leaveCommentResponse: {}
+		    	leaveCommentResponse: {},
+		    	searchUrl: "search?",
+		    	reservationStatuses: [],
+		    	selectedStatuses: [],
+		    	searchUrlStatuses: "",
+		    	searchResults: true,
+		    	allReservations: true
 		    }
 	},
 	template: `
 <div class="containerbody">
     <div class="container auth">
-    <br>
-    <br>
-    <br>
-    <h4>Reservations</h4>
-    <br>
-		<table class="table table-hover">
+	    <br>
+	    <br>
+	    <br>
+	    <h4>Reservations</h4>
+	    <div v-if="reservations.length==0 && allReservations"><small class="form-text text-danger">
+			You haven't made any reservations yet!
+		</small></div>		
+		<br>
+		<div class="form-row">
+			<div v-if="role=='ADMIN' || role=='HOST'" class="col-2">							
+			       <div class="col-lg-12">
+					     <div class="button-group">
+					        <button type="button" class="btn btn-info  dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog"></span> <span class="caret">Status</span></button>
+							<ul class="dropdown-menu">
+							  <li v-for="status in reservationStatuses"  data-value="status"><input name="checkboxes" id="checkboxes-0" :value="status" v-model="selectedStatuses" type="checkbox" />&nbsp;{{status}}</li>
+							  <li><button  @click="filterByStatus()" class="btn btn-info">Filter</button></li>
+							</ul>			
+					  	 </div>
+					</div>			 	
+			 </div>
+			 			 
+		 	<div v-if="role=='ADMIN' || role=='HOST' || role=='GUEST'"class="col-2">
+				<div class="dropdown">
+				  <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				    Sort by
+				  </button>
+				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+				    <a class="dropdown-item" v-on:click="orderBy('price', 'ascending')">Price (ascending)</a>
+				    <a class="dropdown-item" v-on:click="orderBy('price', 'descending')">Price (descending)</a>
+				  </div>
+				</div>
+			</div>
+		</div>	 
+	 	<br>
+	 	<div v-if="!searchResults"><small class="form-text text-danger">
+			No matching results found.
+		</small></div>
+		
+		<br>
+		<table v-if="reservations.length!=0" class="table table-hover">
           <thead>
 		    <tr>
 		      <th scope="col">Apartment</th>
@@ -142,6 +182,41 @@ Vue.component("reservations", {
 			else if(this.rating==null)
 				return false;
 			return true;
+		},
+		filterByStatus: function(){
+			if(this.selectedStatuses.length!=0){
+				this.searchUrlStatuses = '&status=';
+				for(var i = 0; i < this.selectedStatuses.length; i++){
+					console.log(this.selectedStatuses[i])
+					this.searchUrlStatuses+=this.selectedStatuses[i] + ','
+				}
+				this.searchUrlStatuses = this.searchUrlStatuses.substring(0, this.searchUrlStatuses.length-1);
+			} else {
+				this.searchUrlStatuses = "";
+			}
+			axios
+		       .get('rest/reservation/'+this.searchUrl+this.searchUrlStatuses)
+		       .then(response => (this.checkSearchResults(response.data)));
+		},
+		orderBy: function(param, order){			
+			if(param=="price" && order=="ascending"){
+				this.reservations = this.reservations.sort(function(a, b) {
+				    return parseFloat(a.price) - parseFloat(b.price);
+				});
+			} else if(param=="price" && order=="descending"){
+				this.reservations = this.reservations.sort(function(a, b) {
+				    return parseFloat(b.price) - parseFloat(a.price);
+				});
+			}
+		},
+		checkSearchResults: function(response){
+			this.reservations = response;
+			if(this.reservations.length==0){
+				this.searchResults = false;
+			} else {
+				this.searchResults = true;
+			}
+			this.allReservations = false;
 		}
 	},
 	mounted() {
@@ -151,7 +226,10 @@ Vue.component("reservations", {
 		axios
         .get('rest/apartment/all')
         .then(response => (this.apartments = response.data));
-		
+		axios
+        .get('rest/reservation/status/all')
+        .then(response => (this.reservationStatuses = response.data));
+		this.allReservations = true;	
     },
     created() {
     	

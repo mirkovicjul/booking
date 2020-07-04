@@ -1,9 +1,12 @@
 package services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -13,6 +16,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -184,6 +188,76 @@ public class ReservationService {
 		
 		return Response
 			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
+	@GET
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response searchReservations(@Context HttpServletRequest request, 
+			@QueryParam("location") String location,
+			@QueryParam("checkIn") Long checkIn,
+			@QueryParam("checkOut") Long checkOut,
+			@QueryParam("rooms") Long rooms,
+			@QueryParam("guests") Long guests,
+			@QueryParam("priceMin") Long priceMin,
+			@QueryParam("priceMax") Long priceMax,
+			@QueryParam("type") String type,
+			@QueryParam("status") String statuses) {
+		
+		UserRoleEnum[] roles = {UserRoleEnum.GUEST, UserRoleEnum.HOST, UserRoleEnum.ADMIN};
+		if(Authorization.authorizeUser(request, roles)) {
+			ReservationDAO dao = (ReservationDAO) ctx.getAttribute("reservationDAO");
+			ApartmentDAO apartmentDAO = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
+			Collection<Reservation> reservations = new ArrayList<Reservation>();
+			if(Authorization.getUserRole(request).equals("HOST")) {
+				Collection<Apartment> apartments = apartmentDAO.findByHost(Authorization.getUsername(request));		
+				List<Long> apartmentIds = new ArrayList<Long>();
+				for(Apartment a : apartments) {
+					apartmentIds.add(a.getId());
+				}
+				reservations = dao.getReservationsByHost(apartmentIds);				
+			} else if (Authorization.getUserRole(request).equals("ADMIN")) {
+				reservations = dao.findAll();
+			
+			} else {
+				reservations = dao.getReservationsByGuest(Authorization.getUsername(request));			
+			}
+			
+			if(statuses != null) {
+				List<String> statusesList = Arrays.asList(statuses.split(","));
+			
+			reservations = reservations.stream()
+										.filter(r -> statusesList.stream()
+																 .anyMatch(g -> g.equals(r.getStatus().toString())))				
+										.collect(Collectors.toList());		
+			}
+			
+			return Response
+				      .status(Response.Status.OK)
+				      .entity(reservations)
+				      .build();
+
+		}
+		
+		MsgResponse response = new MsgResponse(false, "You are not authorized to see this page.");
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .entity(response)
+			      .build();
+	}
+	
+	
+	@GET
+	@Path("/status/all")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAllReservationStatuses() {
+		List<String> enumNames = Stream.of(ReservationStatusEnum.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+		return Response
+			      .status(Response.Status.OK)
+			      .entity(enumNames)
 			      .build();
 	}
 	
