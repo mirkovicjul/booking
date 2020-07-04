@@ -20,7 +20,10 @@ Vue.component("reservations", {
 		    	selectedStatuses: [],
 		    	searchUrlStatuses: "",
 		    	searchResults: true,
-		    	allReservations: true
+		    	allReservations: true,
+		    	showSearchForm: false,
+		    	username: null,
+		    	searchUrlUsername: ""
 		    }
 	},
 	template: `
@@ -33,6 +36,28 @@ Vue.component("reservations", {
 	    <div v-if="reservations.length==0 && allReservations"><small class="form-text text-danger">
 			You haven't made any reservations yet!
 		</small></div>		
+		<br>
+		<div class="form-group">
+            <label class="asearch-label" for="selectbasic" v-on:click="showSearch()">Search
+                <img src='images/triangle_down.png' height="21" width="21" v-if="!showSearchForm" />
+                <img src='images/triangle_up.png' height="21" width="21" v-if="showSearchForm" />
+            </label>
+		</div>
+		
+		<div v-if="showSearchForm && (role=='ADMIN' || role=='HOST')">
+			<div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="textinput">Username:</label>
+                <div class="">
+                    <input name="username" class="form-control" type="text" v-model="username">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="">
+             		<button class="btn btn-info" v-on:click="search(username)">Search</button>
+        		</div>
+            </div>
+		</div>
 		<br>
 		<div class="form-row">
 			<div v-if="role=='ADMIN' || role=='HOST'" class="col-2">							
@@ -58,7 +83,10 @@ Vue.component("reservations", {
 				  </div>
 				</div>
 			</div>
-		</div>	 
+		</div>
+		
+
+			
 	 	<br>
 	 	<div v-if="!searchResults"><small class="form-text text-danger">
 			No matching results found.
@@ -190,13 +218,22 @@ Vue.component("reservations", {
 					console.log(this.selectedStatuses[i])
 					this.searchUrlStatuses+=this.selectedStatuses[i] + ','
 				}
-				this.searchUrlStatuses = this.searchUrlStatuses.substring(0, this.searchUrlStatuses.length-1);
+				this.searchUrlStatuses = this.searchUrlStatuses.substring(0, this.searchUrlStatuses.length-1+this.searchUrlUsername);
 			} else {
 				this.searchUrlStatuses = "";
 			}
 			axios
 		       .get('rest/reservation/'+this.searchUrl+this.searchUrlStatuses)
 		       .then(response => (this.checkSearchResults(response.data)));
+		},
+		search: function() {
+			if(this.username != null && this.username.trim() != "")
+				this.searchUrlUsername="username="+this.username;
+			else
+				this.searchUrlUsername=""
+			axios
+		       .get('rest/reservation/'+this.searchUrl+this.searchUrlStatuses+this.searchUrlUsername)
+		       .then(response => (this.checkSearchResults(response.data)));;
 		},
 		orderBy: function(param, order){			
 			if(param=="price" && order=="ascending"){
@@ -217,6 +254,10 @@ Vue.component("reservations", {
 				this.searchResults = true;
 			}
 			this.allReservations = false;
+		},
+
+		showSearch: function(){
+			this.showSearchForm = !this.showSearchForm;
 		}
 	},
 	mounted() {

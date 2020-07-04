@@ -195,14 +195,7 @@ public class ReservationService {
 	@Path("/search")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response searchReservations(@Context HttpServletRequest request, 
-			@QueryParam("location") String location,
-			@QueryParam("checkIn") Long checkIn,
-			@QueryParam("checkOut") Long checkOut,
-			@QueryParam("rooms") Long rooms,
-			@QueryParam("guests") Long guests,
-			@QueryParam("priceMin") Long priceMin,
-			@QueryParam("priceMax") Long priceMax,
-			@QueryParam("type") String type,
+			@QueryParam("username") String username,
 			@QueryParam("status") String statuses) {
 		
 		UserRoleEnum[] roles = {UserRoleEnum.HOST, UserRoleEnum.ADMIN};
@@ -228,6 +221,12 @@ public class ReservationService {
 										.filter(r -> statusesList.stream()
 																 .anyMatch(g -> g.equals(r.getStatus().toString())))				
 										.collect(Collectors.toList());		
+			}
+			
+			if(username != null) {
+				reservations = reservations.stream()
+									.filter(r -> r.getGuest().contains(username))
+									.collect(Collectors.toList());
 			}
 			
 			return Response
