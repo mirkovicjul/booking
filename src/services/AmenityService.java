@@ -40,7 +40,6 @@ public class AmenityService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAmenities(@Context HttpServletRequest request) {
 		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST, UserRoleEnum.GUEST};
-		if(Authorization.authorizeUser(request, roles)) { 
 			AmenityDAO dao = (AmenityDAO) ctx.getAttribute("amenityDAO");
 			Collection<Amenity> allAmenities = dao.findAll();
 			Collection<Amenity> amenities = new ArrayList<Amenity>();
@@ -52,10 +51,6 @@ public class AmenityService {
 				      .status(Response.Status.OK)
 				      .entity(amenities)
 				      .build();
-		}
-		return Response
-			      .status(Response.Status.FORBIDDEN)
-			      .build();
 	}
 	
 	@POST

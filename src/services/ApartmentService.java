@@ -7,9 +7,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -292,6 +294,9 @@ public class ApartmentService {
 			apartment.setHost(host);
 			apartment.setActive(false);
 			apartment.setDeleted(false);
+			apartment.setComments(new ArrayList<Comment>());
+			apartment.setImages(new ArrayList<String>());
+			apartment.setDisabledDates(new ArrayList<DisabledDate>());
 			ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");	
 			Boolean response = dao.save(ctx.getRealPath(""), apartment);
 			if(response) {
@@ -432,7 +437,6 @@ public class ApartmentService {
 			@QueryParam("status") String status,
 			@QueryParam("amenities") String amenityIds) {
 		
-
 		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");
 		Collection<Apartment> apartments = dao.findAll();
 		
@@ -449,7 +453,7 @@ public class ApartmentService {
 		
 		if(location != null) {
 			apartments = apartments.stream()
-				.filter(l -> l.getLocation().getAddress().getCity().contains(location) || l.getLocation().getAddress().getCountry().contains(location))
+				.filter(l -> l.getLocation().getAddress().getCity().toLowerCase().contains(location.toLowerCase()) || l.getLocation().getAddress().getCountry().toLowerCase().contains(location.toLowerCase()))
 				.collect(Collectors.toList());
 		}
 		
@@ -475,12 +479,27 @@ public class ApartmentService {
 		}
 		
 		if(checkIn != null && checkOut != null) {
+
+			Calendar cin = Calendar.getInstance();
+			cin.setTimeInMillis(checkIn);
+			Calendar cinRestarted = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+			cinRestarted.clear();
+			cinRestarted.set(cin.get(Calendar.YEAR), cin.get(Calendar.MONTH), cin.get(Calendar.DATE));
+			Long cinTimestamp = cinRestarted.getTimeInMillis();
+			
+			Calendar cout = Calendar.getInstance();
+			cout.setTimeInMillis(checkOut);
+			Calendar coutRestarted = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+			coutRestarted.clear();
+			coutRestarted.set(cout.get(Calendar.YEAR), cout.get(Calendar.MONTH), cout.get(Calendar.DATE));
+			Long coutTimestamp = coutRestarted.getTimeInMillis();
+			
 			apartments = apartments.stream()
 					.filter(apartment -> {
 							final List<DisabledDate> dates = apartment.getDisabledDates().stream()
-									.filter(d -> (d.getStartDate() <= checkIn && d.getEndDate() >= checkIn)
-											|| (d.getStartDate() >= checkIn && d.getEndDate() <= checkOut)
-											|| (d.getStartDate() <= checkOut && d.getEndDate() >= checkOut))
+									.filter(d -> (d.getStartDate() <= cinTimestamp && d.getEndDate() >= cinTimestamp)
+											|| (d.getStartDate() >= cinTimestamp && d.getEndDate() <= coutTimestamp)
+											|| (d.getStartDate() <= coutTimestamp && d.getEndDate() >= coutTimestamp))
 									.collect(Collectors.toList());
 							return dates.isEmpty();
 					}).collect(Collectors.toList());			

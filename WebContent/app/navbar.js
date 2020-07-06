@@ -16,7 +16,7 @@ Vue.component("navbar", {
 
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
-      <li v-if="role!='HOST' && role!='ADMIN'"class="nav-item active">
+      <li v-if="role!='HOST' && role!='ADMIN'" class="nav-item active">
         <a class="nav-link" href="#/apartments">Apartments</a>
       </li>   
       <li v-if="role=='HOST' || role=='ADMIN'" class="nav-item dropdown" >

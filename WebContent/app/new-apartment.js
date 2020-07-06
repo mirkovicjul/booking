@@ -225,9 +225,12 @@ Vue.component("new-apartment", {
 	                            <input name="checkboxes" id="checkboxes-0" :value="amenity" v-model="apartment.amenities" type="checkbox"> {{amenity.name}}
 	                        </label>
 	                    </div>
-                </div>
+                	</div>
+            	</div>
             </div>
-            </div>
+
+			
+			
 
 		   	<div class="form-group">
                 <div class="">
@@ -359,7 +362,7 @@ Vue.component("new-apartment", {
 	},
 	mounted() {
 		if(this.role != "HOST"){
-    		this.$router.push({ name: 'home' });
+    		this.$router.push({ name: 'search' });
 		} else {
 			axios
 	        .get('rest/apartment/types')

@@ -165,8 +165,11 @@ Vue.component("search", {
 	    <section class="col-xs-12 col-sm-6 col-md-12">
 	    <div v-for="apartment in apartments">
 	      <article class="search-result row">
-			  <div class="col-xs-12 col-sm-12 col-md-3">
-				     <img src="images/hotel.png" />
+			  <div v-if="apartment.images.length==0" class="col-xs-12 col-sm-12 col-md-3">				  
+			     <img src="images/hotel.png" />				
+		  	  </div>
+			  <div v-if="apartment.images.length!=0" class="col-xs-12 col-sm-12 col-md-3">			  	
+				 <img :src="getImgUrl(apartment)" class="preview-image"/>				
 			  </div>
 			  <div class="col-xs-12 col-sm-12 col-md-4 ">
 			          <h2><a title=""  style="cursor: pointer;" :href="'#/apartment/'+apartment.id">{{apartment.name}}</a></h2>
@@ -226,16 +229,17 @@ Vue.component("search", {
 			if(params.location.trim()!=""){
 				searchUrl = searchUrl + '&location=' + params.location;
 				query.location = params.location
+				console.log("----- " + searchUrl)
 			}
 			if(params.checkIn!=null){
 				var checkInTimestamp = params.checkIn.getTime();
 				searchUrl = searchUrl + '&checkIn=' + checkInTimestamp;
-				query.checkIn = checkInTimeStamp;
+				query.checkIn = checkInTimestamp;
 			}
 			if(params.checkOut!=null){
 				var checkOutTimestamp = params.checkOut.getTime();
 				searchUrl = searchUrl + '&checkOut=' + checkOutTimestamp;
-				query.checkOut = checkOutTimeStamp;
+				query.checkOut = checkOutTimestamp;
 			}
 			if(params.priceMin!=null){
 				searchUrl = searchUrl + '&priceMin=' + params.priceMin;
@@ -252,10 +256,10 @@ Vue.component("search", {
 			if(params.rooms!=null){
 				searchUrl = searchUrl + '&rooms=' + params.rooms;
 				query.rooms = params.rooms;
-			}					
+			}				
 			this.$router.push({ name: 'search', query });			
 			axios
-		        .get('rest/apartment/'+this.searchUrl)
+		        .get('rest/apartment/'+searchUrl)
 		        .then(response => (this.checkSearchResults(response.data)));
 		},
 		checkSearchResults: function(response){
@@ -377,6 +381,9 @@ Vue.component("search", {
 			axios
 		       .get('rest/apartment/'+this.searchUrl+this.searchUrlType+this.searchUrlStatus+this.searchUrlAmenities)
 		       .then(response => (this.checkSearchResults(response.data)));
+		},
+		getImgUrl: function(apartment){
+			return apartment.images[0]
 		}
 	},
 	mounted() {
@@ -411,6 +418,7 @@ Vue.component("search", {
 		var params = false;
 		if(this.$route.query.location!=null){
 			this.searchUrl = this.searchUrl + '&location=' + this.$route.query.location;
+			console.log(this.searchUrl)
 			params = true;
 		}
 		if(this.$route.query.checkIn!=null){

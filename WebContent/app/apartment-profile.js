@@ -39,7 +39,27 @@ Vue.component("apartment", {
         <br>
         <br>
         <br>
-        <div id="big-form" class="well auth-box">
+        <div id="big-form" class="well auth-box">       
+			 <template>
+			  <div class="">
+			    <div id="myCarousel" class="carousel slide" data-ride="carousel">
+					  <div class="carousel-inner">					  	
+						    <div class="carousel-item" v-for="(img, index) in apartment.images" :class="{ active: index==0 }">						      						      
+						      	<img :src="img" alt="" class="full-image" >						      				
+						    </div>									
+					  </div>
+					  <a class="carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+					    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+					    <span class="sr-only">Previous</span>
+					  </a>
+					  <a class="carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+					    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+					    <span class="sr-only">Next</span>
+					  </a>
+				</div>
+			  </div>
+			</template>
+        	<br>
             <div class="center-element">
                 <h1 class="text-info">{{apartment.name}}</h1>
                   <label class="col-sm-2 col-form-label" for="textinput">
@@ -283,8 +303,10 @@ Vue.component("apartment", {
 				return true;
 		},
 		createReservation: function(){
-			this.reservation.startDate = this.cin.getTime();
-			this.reservation.endDate = this.cout.getTime(); 
+			var startDate = new Date(this.cin.getFullYear,this.cin.getMonth(),this.cin.getDate(), 0, 0, 0);
+			this.reservation.startDate = startDate.getTime();
+			var endDate = new Date(this.cout.getFullYear,this.cout.getMonth(),this.cout.getDate(), 0, 0, 0);
+			this.reservation.endDate = endDate.getTime(); 
 			this.reservation.apartmentId = this.apartment.id;
 			this.reservation.guest = this.username;
 			this.reservation.price = this.price;

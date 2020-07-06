@@ -17,7 +17,7 @@ Vue.component("login", {
         <br>
         <br>
         <br>
-        <div id="big-form" class="well auth-box">
+        <div>
             <div class="form-group">
                 <label class=" control-label" for="textinput">Username:</label>
                 <div class="">

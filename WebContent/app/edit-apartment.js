@@ -405,7 +405,7 @@ Vue.component("edit-apartment", {
 	},
 	mounted() {
 		if(this.role != "ADMIN" && this.role != "HOST") {
-			this.$router.push({ name: 'home' });
+			this.$router.push({ name: 'search' });
 		} else {
 			axios
 	        .get('rest/apartment/types')

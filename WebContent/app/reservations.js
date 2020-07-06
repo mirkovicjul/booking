@@ -1,6 +1,7 @@
 Vue.component("reservations", {
 	data: function () {
 		    return {
+				loggedIn: localStorage.getItem("jwt") ? true : false,
 		    	role: localStorage.getItem("role"),
 		    	user: localStorage.getItem("user"),
 		    	reservations: [
@@ -37,7 +38,7 @@ Vue.component("reservations", {
 			You haven't made any reservations yet!
 		</small></div>		
 		<br>
-		<div class="form-group">
+		<div v-if="role=='ADMIN' || role=='HOST'"class="form-group">
             <label class="asearch-label" for="selectbasic" v-on:click="showSearch()">Search
                 <img src='images/triangle_down.png' height="21" width="21" v-if="!showSearchForm" />
                 <img src='images/triangle_up.png' height="21" width="21" v-if="showSearchForm" />
@@ -218,22 +219,23 @@ Vue.component("reservations", {
 					console.log(this.selectedStatuses[i])
 					this.searchUrlStatuses+=this.selectedStatuses[i] + ','
 				}
-				this.searchUrlStatuses = this.searchUrlStatuses.substring(0, this.searchUrlStatuses.length-1+this.searchUrlUsername);
+				this.searchUrlStatuses = this.searchUrlStatuses.substring(0, this.searchUrlStatuses.length-1);
 			} else {
 				this.searchUrlStatuses = "";
 			}
+			console.log(this.searchUrl+this.searchUrlStatuses+this.searchUrlUsername)
 			axios
-		       .get('rest/reservation/'+this.searchUrl+this.searchUrlStatuses)
+		       .get('rest/reservation/'+this.searchUrl+this.searchUrlStatuses+this.searchUrlUsername)
 		       .then(response => (this.checkSearchResults(response.data)));
 		},
 		search: function() {
 			if(this.username != null && this.username.trim() != "")
-				this.searchUrlUsername="username="+this.username;
+				this.searchUrlUsername="&username="+this.username;
 			else
 				this.searchUrlUsername=""
 			axios
 		       .get('rest/reservation/'+this.searchUrl+this.searchUrlStatuses+this.searchUrlUsername)
-		       .then(response => (this.checkSearchResults(response.data)));;
+		       .then(response => (this.checkSearchResults(response.data)));
 		},
 		orderBy: function(param, order){			
 			if(param=="price" && order=="ascending"){
@@ -261,16 +263,20 @@ Vue.component("reservations", {
 		}
 	},
 	mounted() {
-		axios
-        .get('rest/reservation/all')
-        .then(response => (this.reservations = response.data));
-		axios
-        .get('rest/apartment/all')
-        .then(response => (this.apartments = response.data));
-		axios
-        .get('rest/reservation/status/all')
-        .then(response => (this.reservationStatuses = response.data));
-		this.allReservations = true;	
+		if(!this.loggedIn) {
+			this.$router.push({ name: 'search' });
+		} else {		
+			axios
+	        .get('rest/reservation/all')
+	        .then(response => (this.reservations = response.data));
+			axios
+	        .get('rest/apartment/all')
+	        .then(response => (this.apartments = response.data));
+			axios
+	        .get('rest/reservation/status/all')
+	        .then(response => (this.reservationStatuses = response.data));
+			this.allReservations = true;
+		}
     },
     created() {
     	

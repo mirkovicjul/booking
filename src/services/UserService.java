@@ -246,7 +246,7 @@ public class UserService {
 			
 			if(username != null) {
 				allUsers = allUsers.stream()
-									.filter(u -> u.getUsername().contains(username))
+									.filter(u -> u.getUsername().toLowerCase().contains(username.toLowerCase()))
 									.collect(Collectors.toList());
 			}
 			if(gender != null) {
@@ -270,6 +270,5 @@ public class UserService {
 				.status(Response.Status.FORBIDDEN)
 				.entity(res)
 				.build();
-	
 	}
 }

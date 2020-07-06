@@ -33,7 +33,7 @@ public class UserDAO {
 	}
 
 	public User save(String contextPath, User user) {
-		String userCsv = user.getUsername() + ";" + user.getPassword() + ";" + user.getFirstName() + ";"
+		String userCsv = user.getUsername().toLowerCase() + ";" + user.getPassword() + ";" + user.getFirstName() + ";"
 				+ user.getLastName() + ";" + user.getGender().toString() + ";" + user.getRole().toString();
 		try {
 			System.out.println(userCsv);
@@ -135,10 +135,10 @@ public class UserDAO {
 	}
 
 	public User findByUsernamePassword(String username, String password) {
-		if (!users.containsKey(username)) {
+		if (!users.containsKey(username.toLowerCase())) {
 			return null;
 		}
-		User user = users.get(username);
+		User user = users.get(username.toLowerCase());
 		if (!user.getPassword().equals(password)) {
 			return null;
 		}

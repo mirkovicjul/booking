@@ -206,7 +206,7 @@ Vue.component("new-host", {
 	},
 	mounted() {
 		if(this.role != "ADMIN") {
-    		this.$router.push({ name: 'home' });
+    		this.$router.push({ name: 'search' });
 		} else {
 			axios
 	        .get('rest/user/genders')

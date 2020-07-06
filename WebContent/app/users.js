@@ -105,7 +105,7 @@ Vue.component("users", {
 	},
 	mounted() {
 		if(this.role != "ADMIN" && this.role != "HOST") {
-    		this.$router.push({ name: 'home' });
+    		this.$router.push({ name: 'search' });
 		} else {
 			axios
 	        .get('rest/user/all')

@@ -12,8 +12,12 @@
     height: 100%;
 }
  
+.preview-image{
+	width: 260px;
+  	height: 170px;
+}
 
-
-  
- 
- 
+.full-image{
+	width:100%;
+	height:100%
+}

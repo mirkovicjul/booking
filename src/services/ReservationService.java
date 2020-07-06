@@ -217,10 +217,10 @@ public class ReservationService {
 			if(statuses != null) {
 				List<String> statusesList = Arrays.asList(statuses.split(","));
 			
-			reservations = reservations.stream()
-										.filter(r -> statusesList.stream()
-																 .anyMatch(g -> g.equals(r.getStatus().toString())))				
-										.collect(Collectors.toList());		
+				reservations = reservations.stream()
+											.filter(r -> statusesList.stream()
+																	 .anyMatch(g -> g.equals(r.getStatus().toString())))				
+											.collect(Collectors.toList());		
 			}
 			
 			if(username != null) {
