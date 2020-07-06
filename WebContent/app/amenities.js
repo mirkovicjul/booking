@@ -162,7 +162,7 @@ Vue.component("amenities", {
 	},
 	mounted() {
 		if(this.role != "ADMIN") {
-    		this.$router.push({ name: 'home' });
+    		this.$router.push({ name: 'search' });
 		} else {
 			axios
 	        .get('rest/amenity/all')

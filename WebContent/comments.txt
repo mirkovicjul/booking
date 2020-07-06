@@ -1,1 +1,3 @@
-1;pera;odlican;1;5 
+0;1;pera;excellent;5;false
+1;1;pera;great;5;false
+2;1;pera;ok;3;true

@@ -1,3 +1,5 @@
-admin;sifra123;Admin;Adminovic;MALE;ADMIN
-pera;sifra123;Pera;Peric;MALE;GUEST
-host;123;perica;peric;MALE;HOST
+admin;1;Admin;Adminovic;MALE;ADMIN
+pera;1;Pera;Peric;MALE;GUEST
+user111;1;User;Last;FEMALE;GUEST
+host;1;Marko;Markovic;MALE;HOST
+host2;1;Jovana;Jovanovic;FEMALE;HOST

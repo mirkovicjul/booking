@@ -1,7 +1,7 @@
-1;WiFi;true
-2;TV;true
-3;Iron;true
-4;Washing machine;true
-5;Coffee maker;false
-6;Rent-a-car;false
-7;Shampoo;true
+0;Parking;false
+1;WiFi;false
+2;TV;false
+3;Iron;false
+4;Washing machine;false
+5;Air conditioning;false
+6;Swimming pool;false

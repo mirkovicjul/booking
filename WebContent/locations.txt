@@ -1,1 +1,6 @@
-1;45.267136;19.833549;1
+0;49.276102;-0.700252;6 Place de Québec;14400;Bayeux;France
+1;45.244569;19.825331;Cara Dusana 41;Novi Sad;21000;Serbia
+2;31.623900;-7.984513;Riad Zitoune Jdid, Derb Tbib 50;Marrakesh;40000;Morocco
+3;36.442633;25.426190;Santorini;Santorini;847 00;Greece
+4;-34.033560;23.031912;13 Watsonia Street Paradise;Knysna;6571;South Africa
+5;50.547028;-4.150288;50 Plymouth Road, Dartmoor National Park;Tavistock;PL19 8BU;United Kingdom
