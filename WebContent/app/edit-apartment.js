@@ -22,12 +22,9 @@ Vue.component("edit-apartment", {
 		    		},
 		    		amenities: []
 		    	},
-		    	cin: {
-	    			
-	    		},
-	    		cout: {
-	    			
-	    		},
+		    	cin: {},
+	    		cout: {},
+	    		images: null,
 		    	apartmentTypes: [],
 		    	amenities: [],
 		    	disabledDates: {
@@ -46,7 +43,8 @@ Vue.component("edit-apartment", {
 		    		latitude: false,
 		    		longitude: false		    		
 		    	},
-		    	updateApartmentResponse: {}
+		    	updateApartmentResponse: {},
+		    	uploadImageResponse: {}
 		    }
 	},
 	template: `
@@ -59,11 +57,11 @@ Vue.component("edit-apartment", {
         	<h4>Edit apartment</h4>
 				<div v-if="updateApartmentResponse.success"><small class="form-text text-success">
 					{{updateApartmentResponse.message}}
-				</small></div>
+					</small></div>
 				<div v-if="!updateApartmentResponse.success"><small class="form-text text-danger">
 					{{updateApartmentResponse.message}}
-				</small>
-			</div>
+					</small>
+				</div>
 			<br>
 
             <h5>Basic info</h5>
@@ -238,6 +236,23 @@ Vue.component("edit-apartment", {
                 	</div>
             	</div>
             </div>
+            
+            <div class="form-group row">
+                <div>
+                	<label class="col-sm-2 col-form-label">Images</label>
+               		<input type="file" @change="previewFiles" multiple>
+               		<button class="btn btn-info" v-on:click="uploadImages()" v-bind:disabled="!validateImagesUpload()">Upload</button>
+            		<div v-if="uploadImageResponse.success"><small class="form-text text-success">
+						{{uploadImageResponse.message}}
+						</small>
+					</div>
+					<div v-if="!uploadImageResponse.success"><small class="form-text text-danger">
+						{{uploadImageResponse.message}}
+						</small>
+					</div>
+            	
+            	</div>
+            </div>
 
 		   	<div class="form-group">
                 <div class="">
@@ -342,10 +357,14 @@ Vue.component("edit-apartment", {
 			else
 				return true;
 		},
+		validateImagesUpload: function(){
+			if(this.images==null)
+				return false;
+			else 
+				return true;
+		},
 		update: function(apartment){
 			console.log(apartment);
-			var myJSON = JSON.stringify(apartment);
-			console.log(myJSON);
 			axios
 	          .post('rest/apartment/update', apartment)
 	          .then(response => (this.updateApartmentCheckResponse(response.data)));
@@ -357,7 +376,32 @@ Vue.component("edit-apartment", {
 		        .get('rest/apartment/'+this.$route.params.id)
 		        .then(response => (this.setParameters(response.data)));
 			}
-		}
+		},
+		previewFiles(event) {
+			this.images = event.target.files;
+			 var fd = new FormData();
+			 for(var i = 0; i < this.images.length; i++){
+				  fd.append('image', this.images[i], this.images[i].name)
+			 }
+			 this.images = fd;
+		 },
+		 uploadImages(){
+			 let config = {
+					 headers: {
+						 "Content-Type": "multipart/form-data"
+					 }
+			 }
+			 axios
+			  .post('rest/apartment/'+this.apartment.id+"/upload", this.images, config)
+			      .then(response => (this.checkUploadImageResponse(response.data)));
+		 },
+		 checkUploadImageResponse: function(response){
+			 console.log(response);
+			 this.uploadImageResponse = response;
+			 if(response.success){
+				 this.images = null;
+			 }
+		 }
 	},
 	mounted() {
 		if(this.role != "ADMIN" && this.role != "HOST") {

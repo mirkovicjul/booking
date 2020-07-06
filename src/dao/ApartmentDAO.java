@@ -123,6 +123,23 @@ public class ApartmentDAO {
 		return false;
 	}
 
+	public Boolean saveImages(String contextPath, String imagePath, Long apartmentId) {
+		String imageCsv = apartmentId + ";" + imagePath;
+			try {
+				FileWriter fw = new FileWriter(contextPath + "/photos.txt", true);
+				BufferedWriter bw = new BufferedWriter(fw);
+				PrintWriter out = new PrintWriter(bw);
+				out.println(imageCsv);
+				out.close();
+				this.apartments.get(apartmentId).getImages().add(imagePath);
+				return true;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+	}
+	
+	
 	public Boolean updateApartmentInfo(String contextPath, Apartment newApartmentInfo) {
 		Location newLocation = newApartmentInfo.getLocation();
 		Location location = locationDAO.findById(newLocation.getId());
@@ -298,6 +315,14 @@ public class ApartmentDAO {
 					apartments.get(apartmentId).setDisabledDates(new ArrayList<DisabledDate>());
 				}
 			}
+			Map<Long, List<String>> imagesByApartments = loadImagesByApartment(contextPath);
+			for (Long apartmentId : apartments.keySet()) {
+				if (imagesByApartments.containsKey(apartmentId)) {
+					apartments.get(apartmentId).setImages(imagesByApartments.get(apartmentId));
+				} else {
+					apartments.get(apartmentId).setImages(new ArrayList<String>());
+				}
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
@@ -373,6 +398,50 @@ public class ApartmentDAO {
 			}
 			
 			return disabledDatesByApartments;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public Map<Long, List<String>> loadImagesByApartment(String contextPath) {
+		Map<Long, List<String>> imagesByApartments = new HashMap<Long, List<String>>();
+		BufferedReader in = null;
+		try {
+			File file = new File(contextPath + "/photos.txt");
+			in = new BufferedReader(new FileReader(file));
+			String line;
+			StringTokenizer st;
+			while ((line = in.readLine()) != null) {
+				line = line.trim();
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");
+				while (st.hasMoreTokens()) {
+					Long apartmentId = Long.parseLong(st.nextToken().trim());
+					String imagePath = st.nextToken().trim();
+		
+					if (imagesByApartments.containsKey(apartmentId)) {
+						imagesByApartments.get(apartmentId)
+								.add(imagePath);
+					} else {
+						List<String> images = new ArrayList<String>();
+						images.add(imagePath);
+						imagesByApartments.put(apartmentId, images);
+					}
+				}
+			}
+			in.close();		
+			
+			return imagesByApartments;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			return null;

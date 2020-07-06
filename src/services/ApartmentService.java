@@ -1,10 +1,15 @@
 package services;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +26,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 import beans.Apartment;
 import beans.ApartmentTypeEnum;
@@ -40,10 +48,6 @@ import misc.Authorization;
 
 @Path("/apartment")
 public class ApartmentService {
-
-	static<T> Predicate<T> not(Predicate<T> p) {
-	    return t -> !p.test(t);
-	}
 	
 	@Context
 	ServletContext ctx;
@@ -213,6 +217,61 @@ public class ApartmentService {
 							.build();
 				}
 			} 
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
+	@POST
+	@Path("/{id}/upload")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response uploadImages(@Context HttpServletRequest request, @PathParam("id") Long id,
+			FormDataMultiPart multipart) {
+		UserRoleEnum[] roles = {UserRoleEnum.ADMIN, UserRoleEnum.HOST};
+		if(Authorization.authorizeUser(request, roles)) { 
+			ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");	
+			String UPLOAD_PATH = ctx.getRealPath("");
+		    try{	    	
+		    	Map<String, List<FormDataBodyPart>> map = multipart.getFields();
+
+		        for (Map.Entry<String, List<FormDataBodyPart>> entry : map.entrySet()) {
+
+		            for (FormDataBodyPart part : entry.getValue()) {
+		                InputStream in = part.getEntityAs(InputStream.class);
+		                Long timestamp = System.currentTimeMillis();
+		                int read = 0;
+				        byte[] bytes = new byte[1024];
+				 
+				        String imagePath = "photos" + File.separator + id + File.separator + id + timestamp + (int)Math.random() +".jpg";
+				        File file = new File(UPLOAD_PATH + imagePath);
+				        file.getParentFile().mkdirs();
+				        OutputStream out = new FileOutputStream(file);
+		                while ((read = in.read(bytes)) != -1) 
+				        {
+				            out.write(bytes, 0, read);
+				        }
+				        out.flush();
+				        out.close();
+				        
+				        dao.saveImages(ctx.getRealPath(""), imagePath, id);
+				        
+		            }
+		        }	        
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		        MsgResponse msg = new MsgResponse(true, "Error while uploading file.");
+			    return Response
+					      .status(Response.Status.INTERNAL_SERVER_ERROR)
+					      .entity(msg)
+					      .build();
+		    }
+		    MsgResponse msg = new MsgResponse(true, "Images uploaded.");
+		    return Response
+				      .status(Response.Status.OK)
+				      .entity(msg)
+				      .build();
 		}
 		return Response
 			      .status(Response.Status.FORBIDDEN)
@@ -454,8 +513,7 @@ public class ApartmentService {
 													.anyMatch(apartmentAmenityId -> apartmentAmenityId.equals(queryAmenityId)))
 						.allMatch(b -> b)
 				)
-				.collect(Collectors.toList());
-			
+				.collect(Collectors.toList());			
 		}
 		
 		return Response

@@ -18,6 +18,7 @@ public class Apartment {
 	private Boolean active;
 	private List<Amenity> amenities;
 	private List<Comment> comments;
+	private List<String> images;
 	private Boolean deleted;
 	
 	public Apartment() {
@@ -153,6 +154,14 @@ public class Apartment {
 
 	public void setComments(List<Comment> comments) {
 		this.comments = comments;
+	}
+	
+	public List<String> getImages() {
+		return images;
+	}
+
+	public void setImages(List<String> images) {
+		this.images = images;
 	}
 
 	public Boolean getDeleted() {
