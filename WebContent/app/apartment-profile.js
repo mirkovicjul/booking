@@ -213,7 +213,12 @@ Vue.component("apartment", {
        </div>
 
 	    <div v-if="commentsShown">
-	        <table class="table table-hover">
+		    <div v-if="apartment.comments.length==0"><small class="form-text text-danger">
+								There aren't any reviews for this apartment yet!
+							</small>
+			</div>
+			<br>
+	        <table v-if="apartment.comments.length!=0" class="table table-hover">
 	          <thead>
 			    <tr>
 			      <th scope="col">User</th>
@@ -303,9 +308,13 @@ Vue.component("apartment", {
 				return true;
 		},
 		createReservation: function(){
-			var startDate = new Date(this.cin.getFullYear,this.cin.getMonth(),this.cin.getDate(), 0, 0, 0);
+			console.log("cin " + this.cin);
+			console.log("cout " + this.cout);
+			var startDate = new Date(this.cin.getFullYear(),this.cin.getMonth(),this.cin.getDate(), 0, 0, 0);
 			this.reservation.startDate = startDate.getTime();
-			var endDate = new Date(this.cout.getFullYear,this.cout.getMonth(),this.cout.getDate(), 0, 0, 0);
+			var endDate = new Date(this.cout.getFullYear(),this.cout.getMonth(),this.cout.getDate(), 0, 0, 0);
+			console.log("startDate.getTime() " + startDate)
+			console.log("endDate.getTime() " + endDate)
 			this.reservation.endDate = endDate.getTime(); 
 			this.reservation.apartmentId = this.apartment.id;
 			this.reservation.guest = this.username;

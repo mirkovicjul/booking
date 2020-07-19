@@ -25,7 +25,7 @@ Vue.component("navbar", {
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="#/apartments">All apartments</a>
-          <a v-if="role=='HOST'" class="dropdown-item" href="#/new-apartment">Add new apartment</a>
+          <a v-if="role=='HOST'" class="dropdown-item" href="#/new-apartment">New apartment</a>
           <a v-if="role=='ADMIN'" class="dropdown-item" href="#/amenities">Amenities</a>
         </div>
       </li>   

@@ -44,13 +44,12 @@ public class LocationDAO {
 			}
 		}
 		maxIdLocation++;
-		
+		location.setId(maxIdLocation);
 		Address address = location.getAddress();
 		
 		String locationCsv = maxIdLocation + ";" + location.getLatitude() + ";" + location.getLongitude() + ";"
 				+ address.getStreet() + ";" + address.getCity() + ";" + address.getPostalCode() + ";"
 				+ address.getCountry();
-		
 		try {
 			FileWriter fw = new FileWriter(contextPath + "/locations.txt", true);
 			BufferedWriter bw = new BufferedWriter(fw);

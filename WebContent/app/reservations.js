@@ -13,8 +13,14 @@ Vue.component("reservations", {
 		    		}
 		    	],
 		    	apartments: [],
-		    	comment: "",
-		    	rating: null,
+		    	review: {
+		    		comment: "",
+		    		rating: null,
+		    		apartmentId: null,
+		    		commentator: {
+		    			username: localStorage.getItem("user")
+		    		}
+		    	},
 		    	leaveCommentResponse: {},
 		    	searchUrl: "search?",
 		    	reservationStatuses: [],
@@ -125,7 +131,7 @@ Vue.component("reservations", {
 				      <td v-if="reservation.status=='CREATED' || reservation.status=='ACCEPTED'"><button class="btn btn-info" v-on:click="updateStatus('CANCELLED', reservation.id)" >Cancel</button></td> 
 		    	  </div>
 		    	  <div v-if="role=='GUEST' && reservationEnded(reservation.endDate) && (reservation.status=='FINISHED' || reservation.status=='DECLINED')">
-				      <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">Leave a comment</button></td> 
+				      <td><button type="button" class="btn btn-primary" v-on:click="setApartmentIdForReview(reservation.apartmentId)" data-toggle="modal" data-target="#exampleModalCenter">Leave a comment</button></td> 
 		    	  </div>
 		    	  <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
 					  <div class="modal-dialog modal-dialog-centered" role="document">
@@ -133,17 +139,17 @@ Vue.component("reservations", {
 						    <div id="big-form" class="well auth-box">
 						      <div class="modal-header">
 						        <h5 class="modal-title" id="exampleModalLongTitle">Leave a review</h5>
-						        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						        <button type="button" @click="removeLeaveCommentResponse()" class="close" data-dismiss="modal" aria-label="Close">
 						          <span aria-hidden="true">&times;</span>
 						        </button>
 						      </div>
 						      <div class="modal-body">
-						        <textarea v-model="comment" class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+						        <textarea v-model="review.comment" class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
 						        <br>
 						        <div class="form-group row">
 							           <label class="col-sm-2 col-form-label" for="textinput">Rating:</label>
 							           <div class="">
-						                   <select id="selectbasic" v-model="rating" class="form-control">
+						                   <select id="selectbasic" v-model="review.rating" class="form-control">
 				                                <option value="1">1</option>
 				                                <option value="2">2</option>
 				                                <option value="3">3</option>
@@ -161,8 +167,8 @@ Vue.component("reservations", {
 								</div>
 						      </div>
 						      <div class="modal-footer">
-						        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-						        <button type="button" class="btn btn-primary" v-on:click="leaveComment(reservation)" v-bind:disabled="!validate()">OK</button>
+						        <button type="button" class="btn btn-secondary" @click="removeLeaveCommentResponse()" data-dismiss="modal">Close</button>
+						        <button type="button" class="btn btn-primary" v-on:click="leaveComment(review)" v-bind:disabled="!validate()">OK</button>
 						      </div>
 						     </div>
 					    </div>
@@ -194,21 +200,29 @@ Vue.component("reservations", {
 			var now = Date.now();
 			return now > endDate;
 		},
-		leaveComment: function(reservation){
-			var payload = {"apartmentId":reservation.apartmentId, "commentator":{"username": this.user}, "comment":this.comment, "rating":this.rating};
+		leaveComment: function(){
+			console.log("reviewParams=====");
+			console.log(this.review.comment);
+
 			axios
-	        .post('rest/apartment/comment', payload)
+	        .post('rest/apartment/comment', this.review)
 	        .then(response => (this.checkLeaveCommentResponse(response.data)));
 		},
 		checkLeaveCommentResponse: function(response){
 			this.leaveCommentResponse = response;
-			this.comment = "";
-			this.rating = null;
+			this.review.comment = "";
+			this.review.rating = null;
+		},
+		setApartmentIdForReview: function(apartmentId){
+			this.review.apartmentId = apartmentId;
+		},
+		removeLeaveCommentResponse: function(){
+			this.leaveCommentResponse = {};
 		},
 		validate: function(){
-			if(this.comment.trim()=="")
+			if(this.review.comment.trim()=="")
 				return false;
-			else if(this.rating==null)
+			else if(this.review.rating==null)
 				return false;
 			return true;
 		},

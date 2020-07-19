@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 import beans.Comment;
@@ -44,7 +45,7 @@ public class CommentDAO {
 	}
 	
 	public List<Comment> findByApartment(Long apartmentId) {
-		return commentsByApartments.get(apartmentId);
+		return Optional.ofNullable(commentsByApartments.get(apartmentId)).orElseGet(() -> new ArrayList<Comment>());
 	}
 	
 	public Boolean save(String contextPath, Comment comment) {

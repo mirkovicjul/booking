@@ -142,7 +142,9 @@ public class ApartmentDAO {
 	
 	public Boolean updateApartmentInfo(String contextPath, Apartment newApartmentInfo) {
 		Location newLocation = newApartmentInfo.getLocation();
-		Location location = locationDAO.findById(newLocation.getId());
+		Apartment ap = this.findById(newApartmentInfo.getId());
+		Location location = ap.getLocation();
+		System.out.println("dddd " + location.getId());
 		Boolean newStreet = newLocation.getAddress().getStreet().equals(location.getAddress().getStreet()) ? false : true;
 		Boolean newCity = newLocation.getAddress().getCity().equals(location.getAddress().getCity()) ? false : true;
 		Boolean newPostalCode = newLocation.getAddress().getPostalCode().equals(location.getAddress().getPostalCode()) ? false : true;
@@ -315,7 +317,7 @@ public class ApartmentDAO {
 					apartments.get(apartmentId).setDisabledDates(new ArrayList<DisabledDate>());
 				}
 			}
-			Map<Long, List<String>> imagesByApartments = loadImagesByApartment(contextPath);
+			Map<Long, List<String>> imagesByApartments = loadImagesByApartments(contextPath);
 			for (Long apartmentId : apartments.keySet()) {
 				if (imagesByApartments.containsKey(apartmentId)) {
 					apartments.get(apartmentId).setImages(imagesByApartments.get(apartmentId));
@@ -412,7 +414,7 @@ public class ApartmentDAO {
 		}
 	}
 	
-	public Map<Long, List<String>> loadImagesByApartment(String contextPath) {
+	public Map<Long, List<String>> loadImagesByApartments(String contextPath) {
 		Map<Long, List<String>> imagesByApartments = new HashMap<Long, List<String>>();
 		BufferedReader in = null;
 		try {
