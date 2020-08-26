@@ -78,7 +78,7 @@ public class ReservationDAO {
 				
 		String reservationCsv = maxIdReservation + ";" + reservation.getApartmentId() + ";" + reservation.getGuest() + ";"
 				+ reservation.getStartDate() + ";" + reservation.getEndDate() + ";" + reservation.getPrice() + ";"
-				+ reservation.getMessage() + ";" + "CREATED";
+				+ reservation.getMessage() + ";" + "CREATED" + ";false";
 		
 		try {
 			FileWriter fw = new FileWriter(contextPath + "/reservations.txt", true);
@@ -115,11 +115,13 @@ public class ReservationDAO {
 					Long price = Long.parseLong(st.nextToken().trim());
 					String message = st.nextToken().trim();
 					String status = st.nextToken().trim();
+					String deleted = st.nextToken().trim();
+					if (newStatus.getReservationId().equals(id)) {
+						oldtext += id + ";" + apartmentId + ";" + guest + ";" + startDate + ";" + endDate + ";" + price  + ";" + message  + ";" + newStatus.getStatus() + ";" + deleted + "\r\n";
 
-					if (newStatus.getReservationId().equals(id))
-						oldtext += id + ";" + apartmentId + ";" + guest + ";" + startDate + ";" + endDate + ";" + price  + ";" + message  + ";" + newStatus.getStatus() + "\r\n";
-					else
+					} else {
 						oldtext += line  + "\r\n";
+					}
 				}
 			}
 			reader.close();
@@ -132,6 +134,49 @@ public class ReservationDAO {
 			e.printStackTrace();
 			return false;
 		}	
+	}
+	
+	public Boolean deleteReservationsByApartment(String contextPath, Long apartmentId) {
+		try {
+			File file = new File(contextPath + "/reservations.txt");
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line = "", oldtext = "";
+			StringTokenizer st;
+			while ((line = reader.readLine()) != null) {
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");
+				while (st.hasMoreTokens()) {
+					Long id = Long.parseLong(st.nextToken().trim());
+					Long apartment= Long.parseLong(st.nextToken().trim());
+					String guest = st.nextToken().trim();
+					Long startDate = Long.parseLong(st.nextToken().trim());
+					Long endDate = Long.parseLong(st.nextToken().trim());
+					Long price = Long.parseLong(st.nextToken().trim());
+					String message = st.nextToken().trim();
+					String status = st.nextToken().trim();
+					String deleted = st.nextToken().trim();
+					if (apartmentId.equals(apartment)) {
+						oldtext += id + ";" + apartmentId + ";" + guest + ";" + startDate + ";" + endDate + ";" + price  + ";" + message  + ";" + status + ";true" + "\r\n";
+						this.reservations.get(id).setDeleted(true);
+						System.out.println("time: === "  + System.currentTimeMillis());
+						if(System.currentTimeMillis() <= endDate) {
+							this.reservations.get(id).setStatus(ReservationStatusEnum.CANCELLED);
+						}
+					} else {
+						oldtext += line  + "\r\n";
+					}
+				}
+			}
+			reader.close();
+			FileWriter writer = new FileWriter(contextPath + "/reservations.txt");
+			writer.write(oldtext);
+			writer.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	private void loadReservations(String contextPath) {
@@ -154,8 +199,9 @@ public class ReservationDAO {
 					Long endDate = Long.parseLong(st.nextToken().trim());
 					Long price = Long.parseLong(st.nextToken().trim());
 					String message = st.nextToken().trim();
-					String status = st.nextToken().trim();		
-					reservations.put(id, new Reservation(id, apartmentId, guest, startDate, endDate, price, message, ReservationStatusEnum.valueOf(status)));
+					String status = st.nextToken().trim();
+					String deleted = st.nextToken().trim();
+					reservations.put(id, new Reservation(id, apartmentId, guest, startDate, endDate, price, message, ReservationStatusEnum.valueOf(status), Boolean.valueOf(deleted)));
 				}
 			}
 		} catch (Exception ex) {

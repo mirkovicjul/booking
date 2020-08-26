@@ -38,17 +38,20 @@ public class ApartmentDAO {
 	private CommentDAO commentDAO;
 
 	private AmenityDAO amenityDAO;
+	
+	private ReservationDAO reservationDAO;
 
 	public ApartmentDAO() {
 
 	}
 
 	public ApartmentDAO(String contextPath, LocationDAO locationDAO, UserDAO userDAO, CommentDAO commentDAO,
-			AmenityDAO amenityDAO) {
+			AmenityDAO amenityDAO, ReservationDAO reservationDAO) {
 		this.locationDAO = locationDAO;
 		this.userDAO = userDAO;
 		this.commentDAO = commentDAO;
 		this.amenityDAO = amenityDAO;
+		this.reservationDAO = reservationDAO;
 		loadApartments(contextPath);
 	}
 
@@ -214,6 +217,55 @@ public class ApartmentDAO {
 		}
 	}
 
+	public Boolean deleteApartment(String contextPath, Long apartmentId) {
+		try {
+			File file = new File(contextPath + "/apartments.txt");
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			Boolean found = false;
+			String line = "", oldtext = "";
+			StringTokenizer st;
+			while ((line = reader.readLine()) != null) {
+				if (line.equals("") || line.indexOf('#') == 0)
+					continue;
+				st = new StringTokenizer(line, ";");			
+				Long id = Long.parseLong(st.nextToken().trim());
+				String name = st.nextToken().trim();
+				String apartmentType = st.nextToken().trim();
+				int numberOfRooms = Integer.parseInt(st.nextToken().trim());
+				int capacity = Integer.parseInt(st.nextToken().trim());
+				Long locationId = Long.parseLong(st.nextToken().trim());
+				Location location = locationDAO.findById(locationId);
+				String hostUsername = st.nextToken().trim();
+				User host = userDAO.findByUsername(hostUsername);
+				Long price = Long.parseLong(st.nextToken().trim());
+				String checkIn = st.nextToken().trim();
+				String checkOut = st.nextToken().trim();
+				Boolean active = Boolean.parseBoolean(st.nextToken().trim());
+				if (apartmentId.equals(id)) {
+					found = true;
+					oldtext += id + ";" + name + ";" + apartmentType + ";"
+							+ numberOfRooms + ";" + capacity + ";" + locationId + ";"
+							+ hostUsername + ";" + price + ";" + checkIn + ";"
+							+ checkOut + ";" + active + ";" + "true" + "\r\n";
+				}else {
+					oldtext += line  + "\r\n";		
+				}
+			}
+			reader.close();
+			FileWriter writer = new FileWriter(contextPath + "/apartments.txt");
+			writer.write(oldtext);
+			writer.close();
+			if(!found){
+				return false;
+			} 
+			this.apartments.get(apartmentId).setDeleted(true);
+			return this.reservationDAO.deleteReservationsByApartment(contextPath, apartmentId);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	public Boolean checkReservationAvailabilty(Apartment apartment, Reservation reservation) {
 		List<DisabledDate> disabled = apartment.getDisabledDates();
 		Date checkInDate = new Date(reservation.getStartDate());
@@ -385,6 +437,7 @@ public class ApartmentDAO {
 					Long price = Long.parseLong(st.nextToken().trim());
 					String message = st.nextToken().trim();
 					String status = st.nextToken().trim();
+					String deleted = st.nextToken().trim();
 					if(!status.equals("CANCELLED") && !status.equals("DECLINED")) {
 						disabledDates.put(id, new DisabledDate(id, apartmentId, startDate, endDate-86400000));
 						if (disabledDatesByApartments.containsKey(apartmentId)) {

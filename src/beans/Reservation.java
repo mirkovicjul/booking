@@ -10,13 +10,14 @@ public class Reservation {
 	private Long price;
 	private String message;
 	private ReservationStatusEnum status;
-		
+	private Boolean deleted;
+	
 	public Reservation() {
 		
 	}
 
 	public Reservation(Long id, Long apartmentId, String guest, Long startDate, Long endDate, Long price,
-			String message, ReservationStatusEnum status) {
+			String message, ReservationStatusEnum status, Boolean deleted) {
 		super();
 		this.id = id;
 		this.apartmentId = apartmentId;
@@ -26,6 +27,7 @@ public class Reservation {
 		this.price = price;
 		this.message = message;
 		this.status = status;
+		this.deleted = deleted;
 	}
 
 	public Long getId() {
@@ -90,6 +92,14 @@ public class Reservation {
 
 	public void setStatus(ReservationStatusEnum status) {
 		this.status = status;
+	}
+
+	public Boolean getDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(Boolean deleted) {
+		this.deleted = deleted;
 	}
 	
 }

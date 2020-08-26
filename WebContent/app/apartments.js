@@ -3,7 +3,9 @@ Vue.component("apartments", {
 		    return {
 		    	role: localStorage.getItem("role"),
 		    	apartments: [],
-		    	myInactiveApartments: []
+		    	myInactiveApartments: [],
+		    	deleteApartmentId: null,
+		    	apartmentNotDeleted: null
 		    }
 	},
 	template: `
@@ -11,6 +13,10 @@ Vue.component("apartments", {
 	<div class="container auth">
 		<br>
 		<br>
+		  <small class="form-text text-danger" v-if="apartmentNotDeleted">
+				Could not delete apartment. Something went wrong.
+		  </small>
+		  <br>
 		  <h3 v-if="role=='HOST'">My active apartments</h3>
 		  <div v-if="apartments.length==0 && role=='HOST'">
 		       	<small class="form-text text-danger">
@@ -29,7 +35,27 @@ Vue.component("apartments", {
 				  <div class="col-xs-12 col-sm-12 col-md-4 ">
 				          <h2><a title=""  style="cursor: pointer;" :href="'#/apartment/'+apartment.id">{{apartment.name}}</a></h2>
 				          <div v-if="role=='HOST' || role=='ADMIN'">
-				          	<a  title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit</a>
+				          	<a  title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit </a>|
+				          	<a  title=""  style="cursor: pointer;" :href="''" @click="setDeleteApartmentId(apartment.id)" data-toggle="modal" data-target="#exampleModalCenter"> Delete</a> 
+				         <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+							  <div class="modal-dialog modal-dialog-centered" role="document">
+							    <div class="modal-content">
+								    <div id="big-form" class="well auth-box">
+								      <div class="modal-header">
+								        <h6 class="modal-title" id="exampleModalLongTitle">This action cannot be undone. Are you sure you want to delete this apartment?</h6>
+								        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								          <span aria-hidden="true">&times;</span>
+								        </button>
+								      </div>
+								
+								      <div class="modal-footer">
+								        <button type="button" class="btn btn-primary" @click="setDeleteApartmentId()" data-dismiss="modal">No</button>
+								        <button type="button" class="btn btn-secondary" @click="deleteApartment(this.deleteApartmentId)" data-dismiss="modal">Yes</button>
+								      </div>
+								     </div>
+							    </div>
+							  </div>
+						  </div>  
 				          </div>
 				          <p>{{apartment.apartmentType}}</p>
 				          <p>Max guests: {{apartment.capacity}}</p>
@@ -70,7 +96,27 @@ Vue.component("apartments", {
 					  </div>
 					  <div class="col-xs-12 col-sm-12 col-md-4 ">
 					          <h2><a title=""  style="cursor: pointer;" :href="'#/apartment/'+apartment.id">{{apartment.name}}</a></h2>
-					          <a  title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit</a>      
+					          <a  title=""  style="cursor: pointer;" :href="'#/edit-apartment/'+apartment.id">Edit</a> | 
+					          <a  title=""  style="cursor: pointer;" :href="''" @click="setDeleteApartmentId(apartment.id)" data-toggle="modal" data-target="#exampleModalCenter"> Delete</a> 
+						      <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+									  <div class="modal-dialog modal-dialog-centered" role="document">
+									    <div class="modal-content">
+										    <div id="big-form" class="well auth-box">
+										      <div class="modal-header">
+										        <h6 class="modal-title" id="exampleModalLongTitle">This action cannot be undone. Are you sure you want to delete this apartment?</h6>
+										        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+										          <span aria-hidden="true">&times;</span>
+										        </button>
+										      </div>
+										
+										      <div class="modal-footer">
+										        <button type="button" class="btn btn-primary" @click="setDeleteApartmentId()" data-dismiss="modal">No</button>
+										        <button type="button" class="btn btn-secondary" @click="deleteApartment(this.deleteApartmentId)" data-dismiss="modal">Yes</button>
+										      </div>
+										     </div>
+									    </div>
+									  </div>
+								  </div>
 					          <p>{{apartment.apartmentType}}</p>
 					          <p>Max guests: {{apartment.capacity}}</p>
 					          <p>Number of rooms: {{apartment.numberOfRooms}}</p>
@@ -95,6 +141,22 @@ Vue.component("apartments", {
 	methods : {
 		getImgUrl: function(apartment){
 			return apartment.images[0]
+		},
+		setDeleteApartmentId: function(apartmentId){
+			this.deleteApartmentId = apartmentId;
+		},
+		deleteApartment: function() {
+			axios
+			  .post('rest/apartment/'+this.deleteApartmentId+"/delete")
+			      .then(response => (this.checkDeleteApartmentResponse(response.data)));
+		},
+		checkDeleteApartmentResponse: function(response){
+			console.log(response)
+			if(response.success)
+				window.location.reload();
+			else{
+				this.apartmentNotDeleted = true;
+			}
 		}
 	},
 	mounted() {

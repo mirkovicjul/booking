@@ -114,23 +114,24 @@ Vue.component("reservations", {
 		    </tr>
 		  </thead>
 		  <tbody>
-		    <tr v-for="reservation in reservations">	    	
-			      <td v-for="apartment in apartments" v-if="apartment.id==reservation.apartmentId">{{apartment.name}}</td>
+		    <tr v-for="reservation in reservations">	
+			      <td v-for="apartment in apartments" v-if="apartment.id==reservation.apartmentId && !reservation.deleted">{{apartment.name}}</td>
+			      <td v-if="reservation.deleted">Apartment not available</td>
 			      <td>{{reservation.guest}}</td> 
 			      <td>{{reservation.startDate | moment}}</td> 
 			      <td>{{reservation.endDate | moment}}</td>
 			      <td>{{reservation.price}}</td> 
 			      <td>{{reservation.message}}</td>
 			      <td>{{reservation.status}}</td>
-			      <div v-if="role=='HOST'">
+			      <div v-if="role=='HOST' && !reservation.deleted">
 				      <td v-if="reservation.status=='CREATED'"><button class="btn btn-info" v-on:click="updateStatus('ACCEPTED', reservation.id)" >Accept</button></td> 
 			    	  <td v-if="(reservation.status=='CREATED' || reservation.status=='ACCEPTED') && !reservationEnded(reservation.endDate)"><button class="btn btn-info" v-on:click="updateStatus('DECLINED', reservation.id)">Decline</button></td>
 					  <td v-if="reservation.status=='ACCEPTED' && reservationEnded(reservation.endDate)"><button class="btn btn-info" v-on:click="updateStatus('FINISHED', reservation.id)">Finish</button></td>
 		    	  </div>
-		    	  <div v-if="role=='GUEST'">
+		    	  <div v-if="role=='GUEST' && !reservation.deleted">
 				      <td v-if="reservation.status=='CREATED' || reservation.status=='ACCEPTED'"><button class="btn btn-info" v-on:click="updateStatus('CANCELLED', reservation.id)" >Cancel</button></td> 
 		    	  </div>
-		    	  <div v-if="role=='GUEST' && reservationEnded(reservation.endDate) && (reservation.status=='FINISHED' || reservation.status=='DECLINED')">
+		    	  <div v-if="role=='GUEST' && reservationEnded(reservation.endDate) && (reservation.status=='FINISHED' || reservation.status=='DECLINED') && !reservation.deleted">
 				      <td><button type="button" class="btn btn-primary" v-on:click="setApartmentIdForReview(reservation.apartmentId)" data-toggle="modal" data-target="#exampleModalCenter">Leave a comment</button></td> 
 		    	  </div>
 		    	  <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">

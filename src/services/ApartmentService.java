@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
+import beans.Amenity;
 import beans.Apartment;
 import beans.ApartmentTypeEnum;
 import beans.Comment;
@@ -72,13 +73,13 @@ public class ApartmentService {
 	    	String contextPath = ctx.getRealPath("");
 			ctx.setAttribute("amenityDAO", new AmenityDAO(contextPath));
 		}
-		if (ctx.getAttribute("apartmentDAO") == null) {
-	    	String contextPath = ctx.getRealPath("");
-			ctx.setAttribute("apartmentDAO", new ApartmentDAO(contextPath, (LocationDAO) ctx.getAttribute("locationDAO"), (UserDAO) ctx.getAttribute("userDAO"), (CommentDAO) ctx.getAttribute("commentDAO"), (AmenityDAO) ctx.getAttribute("amenityDAO")));
-		}
 		if (ctx.getAttribute("reservationDAO") == null) {
 	    	String contextPath = ctx.getRealPath("");
 			ctx.setAttribute("reservationDAO", new ReservationDAO(contextPath));
+		}
+		if (ctx.getAttribute("apartmentDAO") == null) {
+	    	String contextPath = ctx.getRealPath("");
+			ctx.setAttribute("apartmentDAO", new ApartmentDAO(contextPath, (LocationDAO) ctx.getAttribute("locationDAO"), (UserDAO) ctx.getAttribute("userDAO"), (CommentDAO) ctx.getAttribute("commentDAO"), (AmenityDAO) ctx.getAttribute("amenityDAO"), (ReservationDAO) ctx.getAttribute("reservationDAO")));
 		}
 		
 	}
@@ -317,6 +318,37 @@ public class ApartmentService {
 			      .status(Response.Status.FORBIDDEN)
 			      .build();
 	}
+	
+	
+	@POST
+	@Path("/{id}/delete")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response deleteApartment(@Context HttpServletRequest request, @PathParam("id") Long id) {
+		
+		ApartmentDAO dao = (ApartmentDAO) ctx.getAttribute("apartmentDAO");			
+		String apartmentHost = dao.findById(id).getHost().getUsername();
+		if((Authorization.getUserRole(request).equals("HOST") && Authorization.getUsername(request).equals(apartmentHost)) || (Authorization.getUserRole(request).equals("ADMIN"))) {
+			Boolean deleted = dao.deleteApartment(ctx.getRealPath(""), id);
+			if(deleted) {
+				MsgResponse res = new MsgResponse(true, "Apartment successfully deleted.");
+				return Response
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			} else {
+				MsgResponse res = new MsgResponse(false, "Something went wrong.");
+				return Response
+						.status(Response.Status.OK)
+						.entity(res)
+						.build();
+			}
+		}
+		return Response
+			      .status(Response.Status.FORBIDDEN)
+			      .build();
+	}
+	
 	
 	@POST
 	@Path("/disable")
